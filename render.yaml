@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: cucumber-events
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 2
+    envVars:
+      - key: ANTHROPIC_AUTH_TOKEN
+        value: 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
+      - key: HF_TOKEN
+        value: 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
+      - key: PYTHON_VERSION
+        value: "3.11.0"
