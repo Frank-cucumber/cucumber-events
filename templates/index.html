@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Cucumber Events Studio{% endblock %}
+
+{% block content %}
+
+{% if calendar %}
+<section>
+  <h2>Upcoming Calendar Events</h2>
+  <div class="cal-list">
+    {% for ev_date, name, desc in calendar %}
+    <div class="cal-row">
+      <span class="cal-date">{{ ev_date.strftime('%d %b') }}</span>
+      <span class="cal-name">{{ name }}</span>
+      <a class="btn-sm"
+         href="{{ url_for('new_event', name=name, date=ev_date.isoformat(), source='calendar') }}">
+        Use event →
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section>
+  <h2>Your Events</h2>
+
+  {% if not events %}
+  <p class="empty">No events yet. Pick one from the calendar above or create a new one.</p>
+  {% else %}
+  <div class="event-grid">
+    {% for e in events %}
+    {% set generated = e['generated_count'] == e['variant_count'] and e['variant_count'] > 0 %}
+    <div class="card">
+      <div class="card-top">
+        <div>
+          <strong>{{ e['name'] }}</strong>
+          {% if e['event_date'] %}
+          <span class="meta-date">{{ e['event_date'] }}</span>
+          {% endif %}
+        </div>
+        {% if generated %}
+          {% if e['vote_count'] > 0 %}
+          <span class="badge badge-voted">{{ e['vote_count'] }} vote{{ 's' if e['vote_count'] != 1 }}</span>
+          {% else %}
+          <span class="badge badge-ready">Ready to vote</span>
+          {% endif %}
+        {% else %}
+          <span class="badge badge-draft">Draft</span>
+        {% endif %}
+      </div>
+      <div class="card-meta">
+        {{ e['variant_count'] }} variant{{ 's' if e['variant_count'] != 1 }}
+        {% if generated %} · images generated{% endif %}
+      </div>
+      <div class="card-actions">
+        <a class="btn-sm" href="{{ url_for('event_detail', event_id=e['id']) }}">View</a>
+        {% if generated %}
+        <a class="btn-sm btn-outline" href="{{ url_for('vote', event_id=e['id']) }}">Vote</a>
+        <a class="btn-sm btn-outline" href="{{ url_for('results', event_id=e['id']) }}">Results</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

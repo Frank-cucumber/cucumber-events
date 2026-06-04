@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}New Event — Cucumber Events{% endblock %}
+
+{% block content %}
+<section class="form-page">
+  <a class="back" href="/">← Back</a>
+  <h2>New Event</h2>
+
+  {% if error %}
+  <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="source" value="{{ form.get('source', 'custom') }}">
+
+    <div class="field">
+      <label>Event name</label>
+      <input type="text" name="name" value="{{ form.get('name', '') }}"
+             placeholder="e.g. Carers' Week" required autofocus>
+    </div>
+
+    <div class="field">
+      <label>Date <span class="hint">(optional)</span></label>
+      <input type="date" name="event_date"
+             value="{{ form.get('event_date', '') or form.get('date', '') }}">
+    </div>
+
+    <p class="ai-note">AI will generate 5 unique taglines when you click Generate Images.</p>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Event</button>
+      <a class="btn-outline" href="/">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

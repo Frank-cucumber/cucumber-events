@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Vote — {{ event['name'] }}{% endblock %}
+
+{% block content %}
+<section class="vote-page">
+  <h2>Vote: {{ event['name'] }}</h2>
+  <p class="vote-intro">Click the image you think works best, enter your name, then submit.</p>
+
+  {% if not variants %}
+  <div class="alert">Images haven't been generated yet. <a href="{{ url_for('event_detail', event_id=event['id']) }}">Go back and generate them first.</a></div>
+  {% else %}
+  <form method="post" id="voteForm">
+    <div class="vote-grid">
+      {% for v in variants %}
+      <label class="vote-card" for="v{{ v['id'] }}">
+        <input type="radio" name="variant_id" id="v{{ v['id'] }}" value="{{ v['id'] }}" required>
+        <img src="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}"
+             alt="Variant {{ v['variant_num'] }}">
+        <div class="vote-card-label">Option {{ v['variant_num'] }}</div>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="vote-submit-row">
+      <input type="text" name="voter_name" placeholder="Your name (optional)" class="name-input">
+      <button type="submit" class="btn">Submit Vote</button>
+    </div>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ event['name'] }} — Cucumber Events{% endblock %}
+
+{% block content %}
+<section>
+  <a class="back" href="/">← Back</a>
+
+  <div class="event-header">
+    <div>
+      <h2>{{ event['name'] }}</h2>
+      {% if event['event_date'] %}
+      <span class="meta-date">{{ event['event_date'] }}</span>
+      {% endif %}
+    </div>
+    <div class="event-header-actions">
+      {% if all_generated %}
+      <a class="btn" href="{{ url_for('vote', event_id=event['id']) }}">Vote on images</a>
+      <a class="btn-outline" href="{{ url_for('results', event_id=event['id']) }}">Results</a>
+      {% endif %}
+      <form method="post" action="{{ url_for('delete_event', event_id=event['id']) }}"
+            onsubmit="return confirm('Delete this event?')">
+        <button class="btn-delete" type="submit">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  {% if not all_generated %}
+  <div class="generate-box">
+    <p>Click to generate 5 images — AI will write the taglines automatically.</p>
+    <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}">
+      <button class="btn" type="submit">Generate Images</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if all_generated %}
+  <div class="share-row">
+    <span>Share voting link:</span>
+    <input class="share-input" id="voteUrl" readonly
+           value="{{ request.url_root }}events/{{ event['id'] }}/vote">
+    <button class="btn-sm" onclick="copyVoteLink()">Copy</button>
+    <span id="copied" style="display:none;color:#1a5c28;font-size:0.85rem;">Copied!</span>
+  </div>
+  {% endif %}
+
+  <div class="image-grid">
+    {% for v in variants %}
+    <div class="image-card">
+      {% if v['image_path'] %}
+      <img src="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}"
+           alt="Variant {{ v['variant_num'] }}">
+      {% else %}
+      <div class="img-placeholder">Not yet generated</div>
+      {% endif %}
+      <div class="image-card-body">
+        <div class="variant-label">Variant {{ v['variant_num'] }}</div>
+        <strong>{{ v['headline'] }}</strong>
+        <span>{{ v['subtext'] }}</span>
+        {% if v['vote_count'] > 0 %}
+        <div class="vote-chip">{{ v['vote_count'] }} vote{{ 's' if v['vote_count'] != 1 }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<script>
+function copyVoteLink() {
+  var el = document.getElementById("voteUrl");
+  el.select();
+  navigator.clipboard.writeText(el.value).then(function() {
+    var c = document.getElementById("copied");
+    c.style.display = "inline";
+    setTimeout(function() { c.style.display = "none"; }, 2000);
+  });
+}
+</script>
+{% endblock %}

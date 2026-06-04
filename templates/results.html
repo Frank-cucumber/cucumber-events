@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ event['name'] }}{% endblock %}
+
+{% block content %}
+<section>
+  <a class="back" href="{{ url_for('event_detail', event_id=event['id']) }}">← Back to event</a>
+  <h2>Results: {{ event['name'] }}</h2>
+
+  {% if total == 0 %}
+  <p class="empty">No votes yet. <a href="{{ url_for('vote', event_id=event['id']) }}">Be the first to vote.</a></p>
+  {% else %}
+  <p class="vote-total">{{ total }} vote{{ 's' if total != 1 }} total</p>
+
+  <div class="results-grid">
+    {% for v in variants %}
+    {% set pct = ((v['vote_count'] / total) * 100) | round(1) if total > 0 else 0 %}
+    <div class="result-card {% if loop.first %}result-winner{% endif %}">
+      {% if loop.first %}
+      <div class="winner-banner">Winner</div>
+      {% endif %}
+      {% if v['image_path'] %}
+      <img src="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}"
+           alt="Variant {{ v['variant_num'] }}">
+      {% endif %}
+      <div class="result-body">
+        <div class="result-label">Option {{ v['variant_num'] }}</div>
+        <div class="result-copy">
+          <strong>{{ v['headline'] }}</strong>
+          <span>{{ v['subtext'] }}</span>
+        </div>
+        <div class="result-bar-wrap">
+          <div class="result-bar" style="width:{{ pct }}%"></div>
+        </div>
+        <div class="result-stat">{{ v['vote_count'] }} vote{{ 's' if v['vote_count'] != 1 }} ({{ pct }}%)</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="results-footer">
+    <a class="btn-outline" href="{{ url_for('vote', event_id=event['id']) }}">Vote again</a>
+  </div>
+</section>
+{% endblock %}
