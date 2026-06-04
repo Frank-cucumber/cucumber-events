@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+graphics/
+photos/
+events.db
+*.zip
+*.jpeg
+*.jpg
+*.png
+!cucumber_logo.png
+*.ical
+ical_extracted/
+ical_extracted_v2/
+.env
