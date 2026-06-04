@@ -10,6 +10,5 @@ events.db
 *.png
 !cucumber_logo.png
 *.ical
-ical_extracted/
 ical_extracted_v2/
 .env

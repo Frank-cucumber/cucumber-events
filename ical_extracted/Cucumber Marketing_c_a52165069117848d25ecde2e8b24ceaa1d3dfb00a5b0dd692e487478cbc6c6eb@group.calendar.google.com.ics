@@ -1,0 +1,1146 @@
+BEGIN:VCALENDAR
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Cucumber Marketing
+X-WR-TIMEZONE:Europe/London
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261116
+DTEND;VALUE=DATE:20261121
+DTSTAMP:20260601T103340Z
+UID:t0mc22ahrd8u7ludfjs668rvh8@google.com
+CREATED:20260506T144751Z
+DESCRIPTION:Staff Wellbeing | Cucumber Marketing Calendar\\n\\nA movement t
+ o speak out against bullying in all settings including the workplace.\\n\\n
+ 💡 Content tip: Reaffirm Cucumber's commitment to a safe\, respectful worki
+ ng environment for all staff.
+LAST-MODIFIED:20260506T144751Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:✋ Anti-Bullying Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260608
+DTEND;VALUE=DATE:20260615
+DTSTAMP:20260601T103340Z
+UID:gbhctdg2pk9avdaj356tjn3278@google.com
+CREATED:20260506T144642Z
+DESCRIPTION:Care & Support | Cucumber Marketing Calendar\\n\\nRaises awaren
+ ess of caring and the challenges unpaid carers face across the UK.\\n\\n💡 
+ Content tip: Acknowledge that many of your staff are also carers themselves
+ .
+LAST-MODIFIED:20260506T144642Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:💚 Carers' Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260119
+DTEND;VALUE=DATE:20260120
+DTSTAMP:20260601T103340Z
+UID:os3tkcdbmej1062fi3h54ke2v0@google.com
+CREATED:20260506T144433Z
+DESCRIPTION:Mental Health | Cucumber Marketing Calendar\\n\\nSamaritans' Br
+ ew Monday — widely cited as the most difficult day of the year for mental h
+ ealth.\\n\\n💡 Content tip: Post a warm message of support to your nurses a
+ nd care staff.
+LAST-MODIFIED:20260506T144433Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🧠 Blue Monday / Brew Monday
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260511
+DTEND;VALUE=DATE:20260518
+DTSTAMP:20260601T103340Z
+UID:4f276mkfls63brduernnpo0vb4@google.com
+CREATED:20260506T144616Z
+DESCRIPTION:Mental Health | Cucumber Marketing Calendar\\n\\nLed by the Men
+ tal Health Foundation. 2026 theme: 'Action — taking action to support good 
+ mental health.'\\n\\n💡 Content tip: Share how Cucumber supports its staff 
+ mental health — supervisions\, 24/7 support\, revalidation help.
+LAST-MODIFIED:20260506T144616Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🧠 Mental Health Awareness Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260601
+DTEND;VALUE=DATE:20260608
+DTSTAMP:20260601T103340Z
+UID:ve6f16j50hnrimjg4ejfdb0u2o@google.com
+CREATED:20260506T144634Z
+DESCRIPTION:Care & Support | Cucumber Marketing Calendar\\n\\nNational cele
+ bration of volunteers and volunteering across the UK.\\n\\n💡 Content tip: 
+ Thank the unpaid carers and volunteers who work alongside your teams.
+LAST-MODIFIED:20260506T144634Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🙌 Volunteers' Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260101
+DTEND;VALUE=DATE:20260201
+DTSTAMP:20260601T103340Z
+UID:iov7g8s0ki85v3kle6rekubm10@google.com
+CREATED:20260506T144416Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nRaise aware
+ ness about cervical cancer prevention\, screening and HPV vaccination.\\n\\
+ n💡 Content tip: Support the women in your workforce — share screening remi
+ nders this month.
+LAST-MODIFIED:20260506T144416Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 Cervical Cancer Awareness Month
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260701
+DTEND;VALUE=DATE:20260801
+DTSTAMP:20260601T103340Z
+UID:b78h70hlkulaeknpk2qpibjqls@google.com
+CREATED:20260506T144709Z
+DESCRIPTION:Inclusion & Diversity | Cucumber Marketing Calendar\\n\\nCelebr
+ ation of LGBT+ communities and advocacy for equality.\\n\\n💡 Content tip: 
+ Show that Cucumber is an inclusive\, welcoming employer for all.
+LAST-MODIFIED:20260506T144709Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🌈 Pride Month
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261010
+DTEND;VALUE=DATE:20261011
+DTSTAMP:20260601T103340Z
+UID:61safr2ka7bfi382kenc28jb6s@google.com
+CREATED:20260506T144743Z
+DESCRIPTION:Mental Health | Cucumber Marketing Calendar\\n\\nGlobal day to 
+ raise awareness of mental health issues and reduce stigma.\\n\\n💡 Content 
+ tip: Your biggest mental health post of Q4 — link back to your 24/7 support
+  offer for nurses and care staff.
+LAST-MODIFIED:20260506T144743Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🧠 World Mental Health Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260530T090000Z
+DTEND:20260530T093000Z
+DTSTAMP:20260601T103340Z
+UID:h23tdn18l8d3kpkcp1fqhkn6sc@google.com
+CREATED:20260508T135408Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\n\nPlatform: F
+ acebook\, Instagram & LinkedIn\n📍 LOCATION: Cardiff\n\nTargeted recruitmen
+ t post for healthcare workers in the Cardiff area. Highlight Cucumber Recru
+ itment's presence in the city — roles for HCAs\, Support Workers and Nurses
+ .\n\nKey benefits to include:\n✅ Weekly pay\n✅ Flexible shifts\n✅ Refer-a-f
+ riend bonus\n\nTone: punchy\, eye-catching\, scroll-stopping. Green colour 
+ scheme to stay on-brand.\n\nHashtags: #CardiffJobs #HealthcareJobs #Cucumbe
+ rRecruitment #HCAJobs #SupportWorker #NursingJobs #SaturdaySpotlight
+LAST-MODIFIED:20260529T095926Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 POST: Saturday Spotlight — Cardiff
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261008
+DTEND;VALUE=DATE:20261009
+DTSTAMP:20260601T103340Z
+UID:umdb4tq5tf2mt8732ovn2e85p0@google.com
+CREATED:20260506T144735Z
+DESCRIPTION:Nursing & Midwifery | Cucumber Marketing Calendar\\n\\nHonours 
+ the hard work and dedication of emergency nurses in high-pressure environme
+ nts.\\n\\n💡 Content tip: Shout out to emergency nurses — one of the toughe
+ st roles in healthcare.
+LAST-MODIFIED:20260506T144735Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🏥 Emergency Nurses Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260513T110000Z
+DTEND:20260513T113000Z
+DTSTAMP:20260601T103340Z
+UID:tjeiq0bs9oea3qotso5tfahv5g@google.com
+CREATED:20260506T145832Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Mental Health Awaren
+ ess Week\\n\\n"Revalidation coming up? 😬 You shouldn't have to face it alo
+ ne. At Cucumber\, we provide full revalidation support and confirmation — s
+ o you can focus on what you do best."\\n\\nMid-MHAW stress relief post — co
+ nnect revalidation anxiety to mental health. Warm\, reassuring tone. Strong
+  Cucumber differentiator.\\n\\nHashtags: #MentalHealthAwarenessWeek #Revali
+ dation #NMC #NurseSupport #CucumberRecruitment
+LAST-MODIFIED:20260506T145832Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: MHAW — Revalidation Stress & Cucumber Support
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260929
+DTEND;VALUE=DATE:20260930
+DTSTAMP:20260601T103340Z
+UID:i18a65q781ku7bcrj5nkku374o@google.com
+CREATED:20260506T144726Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nGlobal camp
+ aign to raise awareness of cardiovascular disease and promote heart health.
+ \\n\\n💡 Content tip: Remind staff to look after their own hearts as well a
+ s their patients'.
+LAST-MODIFIED:20260506T144727Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:❤️ World Heart Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260526T110000Z
+DTEND:20260526T113000Z
+DTSTAMP:20260601T103340Z
+UID:ve2asmolhhm9sl420gkg89h6s4@google.com
+CREATED:20260508T144634Z
+DESCRIPTION:Platform: Facebook & LinkedIn\\nCategory: End of Life Nursing —
+  South West\\n\\nAwareness and recruitment post for end of life specialist 
+ nurses in the South West. Warm\, respectful tone.\\n\\n"End of life nursing
+  is one of the most meaningful specialisms in healthcare. If you are a spec
+ ialist nurse working in palliative or end of life care in the South West\, 
+ Cucumber would love to hear from you."\\n\\nHashtags: #EndOfLifeCare #Palli
+ ativeCare #NursingJobs #SouthWest #CucumberRecruitment #SpecialistNurse
+LAST-MODIFIED:20260508T144635Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: End of Life Specialist Nurses — South West Recruitment
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260511T080000Z
+DTEND:20260511T083000Z
+DTSTAMP:20260601T103340Z
+UID:ts35nkp9krlfmtior2he7pun0k@google.com
+CREATED:20260506T145808Z
+DESCRIPTION:Platform: Facebook & Instagram & LinkedIn\\nCategory: Mental He
+ alth — MHAW Day 1\\n\\n"How are you really? 💙 This week is Mental Health A
+ wareness Week — and we're asking the nurses and carers who look after every
+ one else."\\n\\nOpen the week with a gentle\, human question. Invite commen
+ ts. 2026 theme is ACTION — frame around what Cucumber actively does to supp
+ ort mental health (supervisions\, 24/7 support).\\n\\nHashtags: #MentalHeal
+ thAwarenessWeek #MHAW2026 #NurseWellbeing #CucumberRecruitment
+LAST-MODIFIED:20260508T131218Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Mental Health Awareness Week — "How Are You Really?"
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260228
+DTEND;VALUE=DATE:20260301
+DTSTAMP:20260601T103340Z
+UID:dnl2os79cdcp5juivi9hg8m5jo@google.com
+CREATED:20260506T144513Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nPatient-led
+  day championing equality in healthcare\, diagnosis and therapies for rare 
+ conditions.\\n\\n💡 Content tip: Spotlight carers who specialise in complex
+  and rare conditions.
+LAST-MODIFIED:20260506T144513Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 Rare Disease Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260505T110000Z
+DTEND:20260505T113000Z
+DTSTAMP:20260601T103340Z
+UID:fnc64vb59c505f57loacb1u7ps@google.com
+CREATED:20260506T145704Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Nursing & Midwifery\
+ \n\\n"20 seconds. That's all it takes to save a life. 🙌 Our nurses know it
+ . Our patients feel it."\\n\\nFun educational post about hand hygiene — use
+  an infographic showing the 6-step hand washing technique. Position Cucumbe
+ r nurses as champions of patient safety.\\n\\nHashtags: #WorldHandHygieneDa
+ y #PatientSafety #NursingUK #CucumberRecruitment
+LAST-MODIFIED:20260506T145704Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: World Hand Hygiene Day — Patient Safety
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260603T110000Z
+DTEND:20260603T113000Z
+DTSTAMP:20260601T103340Z
+UID:tpsfl2v5bo6c9fams5jmjc9qpk@google.com
+CREATED:20260529T095952Z
+DESCRIPTION:Platform: Facebook\, Instagram & LinkedIn\nCategory: Awareness 
+ — Volunteers' Week (1–7 June)\n\nMid-week Volunteers' Week post celebrating
+  the staff who go above and beyond — the nurses and carers who volunteer th
+ eir time\, mentor newer staff\, take on extra shifts\, or support their com
+ munities outside of work.\n\nKey message: "It's Volunteers' Week — and we w
+ ant to take a moment to recognise the healthcare workers who don't just tur
+ n up for work\, but turn up for everything. The ones who mentor\, who cover
+ \, who volunteer in their own time\, who show up for their communities. We 
+ see you. 💚"\n\nLight brand mention — community-focused\, not recruitment-l
+ ed.\n\nHashtags: #VolunteersWeek #HealthcareHeroes #CucumberRecruitment #Th
+ ankYou #AboveAndBeyond
+LAST-MODIFIED:20260529T095953Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🙌 POST: Volunteers' Week — Above & Beyond
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260525T080000Z
+DTEND:20260525T083000Z
+DTSTAMP:20260601T103340Z
+UID:1itc6i2djuqvem7h61gibainh4@google.com
+CREATED:20260508T145949Z
+DESCRIPTION:Platform: Facebook & Instagram & LinkedIn\\nCategory: Recruitme
+ nt — Cucumber Benefits\\n\\nHighlight quarterly supervisions as a genuine d
+ ifferentiator. Position as something other agencies do not offer.\\n\\n"Eve
+ ry 3 months\, we sit down with our nurses and care workers for a proper che
+ ck-in. Not a tick-box. A real conversation about how you are doing and wher
+ e you want to go. That is what working with Cucumber looks like."\\n\\nHash
+ tags: #NurseSupport #CucumberRecruitment #AgencyNursing #NursingJobs #CareW
+ orkers #Supervision
+LAST-MODIFIED:20260508T145949Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Quarterly Supervisions — We Check In Properly
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260101
+DTEND;VALUE=DATE:20260201
+DTSTAMP:20260601T103340Z
+UID:tjir4eh2ekg2ahd65lo3oolqes@google.com
+CREATED:20260506T144424Z
+DESCRIPTION:Staff Wellbeing | Cucumber Marketing Calendar\\n\\nAlcohol Chan
+ ge UK campaign encouraging a month free from alcohol.\\n\\n💡 Content tip: 
+ A great nudge to check in on staff wellbeing and promote healthy habits.
+LAST-MODIFIED:20260506T144424Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 Dry January
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260601T110000Z
+DTEND:20260601T113000Z
+DTSTAMP:20260601T103340Z
+UID:qm92vklht983jju2qqpkm4o47s@google.com
+CREATED:20260529T095935Z
+DESCRIPTION:Platform: Facebook\, Instagram & LinkedIn\nCategory: Awareness 
+ — Volunteers' Week (1–7 June)\n\nKick-off post for Volunteers' Week. Warm\,
+  thankful tone celebrating the unpaid carers\, family members and volunteer
+ s who work alongside healthcare teams every day.\n\nKey message: "Today mar
+ ks the start of Volunteers' Week 🙌 A huge thank you to every volunteer and
+  unpaid carer who supports our healthcare system. You don't wear a badge or
+  a uniform — but the work you do matters more than you know. 💚"\n\nLight b
+ rand mention — no hard CTA. This is a community/values post.\n\nHashtags: #
+ VolunteersWeek #ThankAVolunteer #UnpaidCarers #CucumberRecruitment #Healthc
+ areCommunity
+LAST-MODIFIED:20260529T095935Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🙌 POST: Volunteers' Week Kick-Off — Thank You
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260614
+DTEND;VALUE=DATE:20260622
+DTSTAMP:20260601T103340Z
+UID:he0g0l7njhqrflpjtctoibqink@google.com
+CREATED:20260506T144651Z
+DESCRIPTION:Staff Wellbeing | Cucumber Marketing Calendar\\n\\nMen's Health
+  Forum annual campaign — theme to be announced.\\n\\n💡 Content tip: Encour
+ age male nurses and care workers to prioritise their own health.
+LAST-MODIFIED:20260506T144651Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:💪 Men's Health Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260613T090000Z
+DTEND:20260613T093000Z
+DTSTAMP:20260601T103340Z
+UID:qmv1g26tgeo29u6sq4ng5tbr2c@google.com
+CREATED:20260508T135944Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\\n\\nPlatform:
+  Facebook\, Instagram & LinkedIn\\n\\n📍 LOCATION: [POSTCODE/AREA TBC]\\n\\
+ nPost a targeted recruitment post for healthcare workers in this postcode a
+ rea. Include roles available\, pay rates and Cucumber benefits.\\n\\n💡 Upd
+ ate this event with the location each week before posting.
+LAST-MODIFIED:20260508T135945Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 Saturday Spotlight — [AREA TBC]
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260509T090000Z
+DTEND:20260509T093000Z
+DTSTAMP:20260601T103340Z
+UID:6i99ubdo4fid7tqe8m525ubmu0@google.com
+CREATED:20260508T135339Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\\n\\nPlatform:
+  Facebook\, Instagram & LinkedIn\\n\\n📍 LOCATION: [POSTCODE/AREA TBC]\\n\\
+ nPost a targeted recruitment post for healthcare workers in this postcode a
+ rea. Include roles available\, pay rates and Cucumber benefits.\\n\\n💡 Upd
+ ate this event with the location each week before posting.
+LAST-MODIFIED:20260508T144351Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 Saturday Spotlight — [AREA TBC]
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260516T090000Z
+DTEND:20260516T093000Z
+DTSTAMP:20260601T103340Z
+UID:o3n3fr6dad5juse33gvl8e4fsg@google.com
+CREATED:20260508T135350Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\\n\\nPlatform:
+  Facebook\, Instagram & LinkedIn\\n\\n📍 LOCATION: [POSTCODE/AREA TBC]\\n\\
+ nPost a targeted recruitment post for healthcare workers in this postcode a
+ rea. Include roles available\, pay rates and Cucumber benefits.\\n\\n💡 Upd
+ ate this event with the location each week before posting.
+LAST-MODIFIED:20260508T135351Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 Saturday Spotlight — [AREA TBC]
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260201
+DTEND;VALUE=DATE:20260301
+DTSTAMP:20260601T103340Z
+UID:bnt9vj40bbhs6f4jul3s285me0@google.com
+CREATED:20260506T144448Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nBritish Hea
+ rt Foundation campaign promoting heart health and circulatory disease aware
+ ness.\\n\\n💡 Content tip: Encourage staff heart health checks and share he
+ art-healthy tips.
+LAST-MODIFIED:20260506T144449Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 Heart Month
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260515T110000Z
+DTEND:20260515T113000Z
+DTSTAMP:20260601T103340Z
+UID:pjbdn2k9god6fsn6bfppkrd52o@google.com
+CREATED:20260506T145852Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Mental Health Awaren
+ ess Week\\n\\n"What does good mental health support at work actually look l
+ ike? 💬 Drop your thoughts in the comments."\\n\\nPoll/discussion post to d
+ rive engagement mid-MHAW. Then follow up in comments with Cucumber's answer
+  — supervisions\, 24/7 support\, revalidation help. Let the community talk 
+ first.\\n\\nHashtags: #MentalHealthAwarenessWeek #MHAW2026 #NursingCommunit
+ y #CucumberRecruitment
+LAST-MODIFIED:20260506T145853Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: MHAW — "What Does Good Support Look Like?" Poll
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260606T090000Z
+DTEND:20260606T093000Z
+DTSTAMP:20260601T103340Z
+UID:q9svlgge10ikvn88s449eok9fc@google.com
+CREATED:20260508T135936Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\\n\\nPlatform:
+  Facebook\, Instagram & LinkedIn\\n\\n📍 LOCATION: [POSTCODE/AREA TBC]\\n\\
+ nPost a targeted recruitment post for healthcare workers in this postcode a
+ rea. Include roles available\, pay rates and Cucumber benefits.\\n\\n💡 Upd
+ ate this event with the location each week before posting.
+LAST-MODIFIED:20260508T135936Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 Saturday Spotlight — [AREA TBC]
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260506
+DTEND;VALUE=DATE:20260513
+DTSTAMP:20260601T103340Z
+UID:m3u5a2ubcfjo05mbko1sad5mno@google.com
+CREATED:20260506T144603Z
+DESCRIPTION:Nursing & Midwifery | Cucumber Marketing Calendar\\n\\nAnnual c
+ elebration of nurses\, concluding on Florence Nightingale's birthday on 12 
+ May. 2026 theme: 'Our Nurses. Our Future. The Economic Power of Care.'\\n\\
+ n💡 Content tip: Your biggest nursing celebration of the year — plan conten
+ t all week. Lead with gratitude and highlight your NMC fee benefit on 12 Ma
+ y.
+LAST-MODIFIED:20260506T144603Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:💙 National Nurses Week & International Nurses Day (12 May)
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260531T110000Z
+DTEND:20260531T113000Z
+DTSTAMP:20260601T103340Z
+UID:ovj7vmbikgpgdmelrco56oqfak@google.com
+CREATED:20260508T150016Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Engagement — Communi
+ ty\\n\\nSunday engagement post with a different question — focused on caree
+ r and what nurses would tell their younger selves.\\n\\n"Sunday question fo
+ r our nurses and carers — if you could give your newly qualified self one p
+ iece of advice\, what would it be? Drop it in the comments. 💙"\\n\\nHashta
+ gs: #NursingCommunity #NurseLife #CareWorkers #CucumberRecruitment #SundayQ
+ uestion #NewlyQualified
+LAST-MODIFIED:20260508T150016Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Sunday Question — Advice to Your Newly Qualified Self
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260301
+DTEND;VALUE=DATE:20260302
+DTSTAMP:20260601T103340Z
+UID:e8njd8d7ssqk5cl40etho907f0@google.com
+CREATED:20260506T144521Z
+DESCRIPTION:Mental Health | Cucumber Marketing Calendar\\n\\nRaises awarene
+ ss and encourages empathy around self-harm.\\n\\n💡 Content tip: Signpost s
+ taff to mental health support resources — be the agency that cares.
+LAST-MODIFIED:20260506T144521Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🧠 Self-Injury Awareness Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260507T110000Z
+DTEND:20260507T113000Z
+DTSTAMP:20260601T103340Z
+UID:ulnd6le4p88ofojsqpmd7ofic8@google.com
+CREATED:20260506T145724Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Nursing & Midwifery 
+ — Nurses Week Day 2\\n\\n"Why did you become a nurse?" 💙\\n\\nEngagement p
+ ost — invite nurses in the comments to share their story in one sentence. P
+ air with a simple\, warm graphic. Respond to every comment to boost reach.\
+ \n\\nHashtags: #NationalNursesWeek #NursingUK #WhyINurse #CucumberRecruitme
+ nt
+LAST-MODIFIED:20260508T121448Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Nurses Week Day 2 — "Why Did You Become a Nurse?"
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260604T110000Z
+DTEND:20260604T113000Z
+DTSTAMP:20260601T103340Z
+UID:65rf5cnoiupd1gjjo6kbcb6cr4@google.com
+CREATED:20260529T100001Z
+DESCRIPTION:Platform: Facebook\, Instagram & LinkedIn\nCategory: Brand — Te
+ stimonial / Why Cucumber\n\nBrand-building post sharing what it's actually 
+ like to work with Cucumber Recruitment. Could be a testimonial-style quote 
+ from a nurse or HCA\, OR a "Why Cucumber" post highlighting what makes the 
+ agency different.\n\nSuggested message: "Why do our nurses and HCAs stay wi
+ th Cucumber? Because we treat you like a person\, not a placement. Real con
+ versations. Real support. Real roles that fit your life. 💚"\n\nOr pull a d
+ irect quote/testimonial if available.\n\nTone: warm\, human\, authentic. Gr
+ een colour scheme.\n\n💡 Update this event with a specific testimonial if y
+ ou have one ready.\n\nHashtags: #WhyCucumber #CucumberRecruitment #NursingJ
+ obs #HCAJobs #AgencyLife #HealthcareJobs
+LAST-MODIFIED:20260529T100001Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:💚 POST: Why Cucumber — Testimonial / Brand
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260520T110000Z
+DTEND:20260520T113000Z
+DTSTAMP:20260601T103340Z
+UID:2m3vi4p0gb2a3lp0ebtt08ptjo@google.com
+CREATED:20260506T145926Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Dementia Action Week
+  — Mid Week\\n\\n"What does great dementia care really look like? It's reme
+ mbering someone's favourite song. Sitting with them\, not rushing. Seeing t
+ he person\, not the diagnosis. Our carers do this every day. 💙"\\n\\nEmoti
+ onal storytelling post — person-centred care angle. Great for sharing. If y
+ ou have a staff photo or quote to accompany this\, even better.\\n\\nHashta
+ gs: #DementiaActionWeek #PersonCentredCare #DementiaCare #CucumberRecruitme
+ nt
+LAST-MODIFIED:20260506T145926Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Dementia Action Week — Person-Centred Care Story
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260401
+DTEND;VALUE=DATE:20260501
+DTSTAMP:20260601T103340Z
+UID:gjblr79bc1klt3d11smraclh88@google.com
+CREATED:20260506T144545Z
+DESCRIPTION:Mental Health | Cucumber Marketing Calendar\\n\\nAnnual campaig
+ n raising awareness of causes\, effects and management of stress. 2026 them
+ e: breaking the stigma around mental health.\\n\\n💡 Content tip: The perfe
+ ct month to shout about your 24/7 support and quarterly supervisions.
+LAST-MODIFIED:20260506T144545Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🧠 Stress Awareness Month
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260506T080000Z
+DTEND:20260506T083000Z
+DTSTAMP:20260601T103340Z
+UID:k3e6dhuti7c0jdjsd8npqkctas@google.com
+CREATED:20260506T145715Z
+DESCRIPTION:Platform: Facebook & Instagram & LinkedIn\\nCategory: Nursing &
+  Midwifery — Nurses Week Day 1\\n\\n🎟️ NURSES WEEK LAUNCH POST\\n"This wee
+ k is for you. Happy National Nurses Week to every nurse who shows up\, day 
+ after day\, with compassion and courage. 💙"\\n\\nLaunch the week with a bo
+ ld\, celebratory graphic. Tease that you'll be posting every day this week.
+  Ask nurses to comment what year they qualified.\\n\\nHashtags: #NationalNu
+ rsesWeek #NursingUK #ThankYouNurses #CucumberRecruitment
+LAST-MODIFIED:20260506T145715Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Nurses Week Day 1 — Launch & Celebration
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260528T110000Z
+DTEND:20260528T113000Z
+DTSTAMP:20260601T103340Z
+UID:2cdq8e3dmjal2v9rjb18dg4568@google.com
+CREATED:20260508T150001Z
+DESCRIPTION:Platform: LinkedIn & Facebook\\nCategory: Recruitment — NMC Awa
+ reness\\n\\nA different angle on the NMC fee — not about the increase speci
+ fically but about what being on the register really means and what Cucumber
+  does to support nurses in maintaining it. Focus on revalidation support ra
+ ther than the fee itself.\\n\\n"Staying on the NMC register takes time\, ef
+ fort and commitment. Revalidation every 3 years. CPD hours. Reflective acco
+ unts. At Cucumber we support you through every step of it — and we provide 
+ your confirmation too."\\n\\nHashtags: #NMC #Revalidation #NursingUK #Regis
+ teredNurse #CucumberRecruitment #NurseSupport
+LAST-MODIFIED:20260508T150001Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: NMC Register — What We Do To Support You
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260522T160000Z
+DTEND:20260522T163000Z
+DTSTAMP:20260601T103340Z
+UID:haitpe22n0sf5dmjpsf6omtev0@google.com
+CREATED:20260506T145937Z
+DESCRIPTION:Platform: Facebook & LinkedIn\\nCategory: Dementia Action Week 
+ — Close & Recruitment\\n\\n"Dementia Action Week closes today. But our comm
+ itment to outstanding dementia care never does. If you're an HCA or support
+  worker with experience in dementia care — Cucumber wants to hear from you.
+  💙"\\n\\nClose out Dementia Action Week with a gentle recruitment call to 
+ action. Target HCAs with dementia care experience. Link to the relevant job
+  page.\\n\\nHashtags: #DementiaActionWeek #HCAJobs #SupportWorker #Dementia
+ Care #CucumberRecruitment
+LAST-MODIFIED:20260506T145937Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Dementia Action Week Close — HCA Recruitment CTA
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260523T090000Z
+DTEND:20260523T093000Z
+DTSTAMP:20260601T103340Z
+UID:b3bpcvjvmqq7q49r7p25mqnfes@google.com
+CREATED:20260508T135359Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\\n\\nPlatform:
+  Facebook\, Instagram & LinkedIn\\n\\n📍 LOCATION: [POSTCODE/AREA TBC]\\n\\
+ nPost a targeted recruitment post for healthcare workers in this postcode a
+ rea. Include roles available\, pay rates and Cucumber benefits.\\n\\n💡 Upd
+ ate this event with the location each week before posting.
+LAST-MODIFIED:20260508T135359Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 Saturday Spotlight — [AREA TBC]
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260518T080000Z
+DTEND:20260518T083000Z
+DTSTAMP:20260601T103340Z
+UID:3cs79o3vbnlduso7ttvf9b1r6c@google.com
+CREATED:20260506T145916Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Dementia Action Week
+  — Day 1\\n\\n"1 in 3 of us will be affected by dementia in our lifetime — 
+ as a patient\, a family member\, or a carer. This week is Dementia Action W
+ eek and we want to celebrate the incredible people who show up for those li
+ ving with dementia every single day. 💙"\\n\\nOpen Dementia Action Week wit
+ h a powerful awareness stat. Warm\, community-led feel. Spotlight your care
+  teams working in dementia settings.\\n\\nHashtags: #DementiaActionWeek #Al
+ zheimersUK #DementiaCare #CucumberRecruitment
+LAST-MODIFIED:20260506T145916Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Dementia Action Week — Launch & Awareness
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261203
+DTEND;VALUE=DATE:20261204
+DTSTAMP:20260601T103340Z
+UID:qn2ikl196mr5sertgud5vl1kmo@google.com
+CREATED:20260506T144827Z
+DESCRIPTION:Inclusion & Diversity | Cucumber Marketing Calendar\\n\\nUN obs
+ ervance promoting awareness of disability rights and inclusion.\\n\\n💡 Con
+ tent tip: Celebrate your teams supporting people with complex disabilities.
+LAST-MODIFIED:20260506T144827Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:♿ International Day of Persons with Disabilities
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260620T090000Z
+DTEND:20260620T093000Z
+DTSTAMP:20260601T103340Z
+UID:3eq2f00g46n64t73fp2lf6pl54@google.com
+CREATED:20260508T135953Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\\n\\nPlatform:
+  Facebook\, Instagram & LinkedIn\\n\\n📍 LOCATION: [POSTCODE/AREA TBC]\\n\\
+ nPost a targeted recruitment post for healthcare workers in this postcode a
+ rea. Include roles available\, pay rates and Cucumber benefits.\\n\\n💡 Upd
+ ate this event with the location each week before posting.
+LAST-MODIFIED:20260508T135953Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 Saturday Spotlight — [AREA TBC]
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260527T160000Z
+DTEND:20260527T163000Z
+DTSTAMP:20260601T103340Z
+UID:06lhsg3n6hn5d2tb2jjs63sot8@google.com
+CREATED:20260508T144647Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Staff Wellbeing\\n\\
+ n24/7 clinical support post — emotional\, reassuring tone aimed at nurses a
+ nd HCAs considering agency work.\\n\\n"Difficult shift? 2am and you need so
+ meone? At Cucumber there is always someone at the end of the phone. Day or 
+ night. Because nursing does not stop at 5pm\, and neither do we."\\n\\nHash
+ tags: #NurseSupport #24x7 #AgencyNursing #CucumberRecruitment #NurseWellbei
+ ng
+LAST-MODIFIED:20260508T144647Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: 24/7 Support — You Are Never Alone
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260605T110000Z
+DTEND:20260605T113000Z
+DTSTAMP:20260601T103340Z
+UID:abjc9nue9m8f1s758cghg6f7f4@google.com
+CREATED:20260529T100010Z
+DESCRIPTION:Platform: Facebook\, Instagram & LinkedIn\nCategory: Recruitmen
+ t — Weekend Push\n\nEnd-of-week recruitment push to catch healthcare worker
+ s thinking about their next move over the weekend. Pairs well with Voluntee
+ rs' Week wrap-up.\n\nSuggested message: "It's been Volunteers' Week — a rem
+ inder of just how much heart goes into healthcare. If you're a nurse\, HCA 
+ or support worker thinking about your next role\, we'd love to chat. Drop u
+ s a message and we'll take it from there. 💚"\n\nHighlight:\n✅ Weekly pay\n
+ ✅ Flexible shifts\n✅ An agency that actually listens\n\nTone: warm but with
+  a clear "get in touch" CTA. Green colour scheme.\n\nHashtags: #NowHiring #
+ CucumberRecruitment #HCAJobs #SupportWorker #NursingJobs #HealthcareCareers
+  #FridayFeeling
+LAST-MODIFIED:20260529T100010Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Weekend Recruitment Push — Get In Touch
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260508T080000Z
+DTEND:20260508T083000Z
+DTSTAMP:20260601T103340Z
+UID:c5p2gtga6svd01i9ak4fnm1d2o@google.com
+CREATED:20260506T145736Z
+DESCRIPTION:Platform: LinkedIn & Facebook\\nCategory: Nursing & Midwifery —
+  Nurses Week Day 3\\n\\n"Did you know there are over 800\,000 registered nu
+ rses in the UK? Each one is a licence to practise\, a commitment to care\, 
+ and a person who chose this profession on purpose. 💙"\\n\\nStat-led awaren
+ ess post. Professional tone for LinkedIn. Follow with a subtle nod to Cucum
+ ber's NMC fee benefit — "which is why we pay it after 1 year's service."\\n
+ \\nHashtags: #NationalNursesWeek #NMC #NursingProfession #CucumberRecruitme
+ nt
+LAST-MODIFIED:20260508T121437Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Nurses Week Day 3 — NMC & The Value of Nursing
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261114
+DTEND;VALUE=DATE:20261115
+DTSTAMP:20260601T103340Z
+UID:ur2uslgctc0n6oe5kbie4hk0eg@google.com
+CREATED:20260506T144800Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nInternation
+ al Diabetes Federation campaign raising global awareness of diabetes.\\n\\n
+ 💡 Content tip: Highlight the diabetes care skills of your nursing workforc
+ e.
+LAST-MODIFIED:20260506T144801Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 World Diabetes Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260514T160000Z
+DTEND:20260514T163000Z
+DTSTAMP:20260601T103340Z
+UID:3qpfef0k2e5s1os4kv89013mi4@google.com
+CREATED:20260506T145842Z
+DESCRIPTION:Platform: Facebook & LinkedIn\\nCategory: Mental Health Awarene
+ ss Week\\n\\n"2am. Difficult shift. You need someone. At Cucumber\, there's
+  always someone at the end of the phone — 24 hours a day\, 7 days a week. B
+ ecause nursing doesn't stop at 5pm\, and neither do we. 💙"\\n\\nEmotional\
+ , end-of-day post timed for when nurses finish evening shifts. Highlight 24
+ /7 clinical support. This is a strong recruitment message wrapped in a ment
+ al health frame.\\n\\nHashtags: #MentalHealthAwarenessWeek #NurseSupport #2
+ 4x7 #CucumberRecruitment
+LAST-MODIFIED:20260506T145842Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: MHAW — 24/7 Clinical Support Post
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260510T110000Z
+DTEND:20260510T113000Z
+DTSTAMP:20260601T103340Z
+UID:72ec6lafuf014si7qs4mul7mts@google.com
+CREATED:20260506T145756Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Nursing & Midwifery 
+ — Nurses Week Weekend\\n\\n"Tag a nurse who deserves to hear this today: Yo
+ u are incredible. 💙"\\n\\nSimple\, shareable weekend post. Easy engagement
+  driver — tagging spreads reach organically. Keep copy short. Bold graphic 
+ with "You Are Incredible" as the hero text.\\n\\nHashtags: #NationalNursesW
+ eek #NursingUK #ThankYouNurses #CucumberRecruitment
+LAST-MODIFIED:20260508T121434Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Nurses Week Weekend — Tag a Nurse
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260602T110000Z
+DTEND:20260602T113000Z
+DTSTAMP:20260601T103340Z
+UID:dlpp58kog882rikpdthed6kfks@google.com
+CREATED:20260529T095944Z
+DESCRIPTION:Platform: Facebook\, Instagram & LinkedIn\nCategory: Recruitmen
+ t — Targeted Role Post\n\nPunchy\, eye-catching recruitment post. Location 
+ and role TBC — update event before posting.\n\nSuggested format (matching t
+ he Plymouth post style):\n- Bold headline with location\n- Hero pay rate as
+  the standout feature\n- Short supporting message about Cucumber benefits\n
+ - Clear "Apply today" CTA\n\nCucumber benefits to highlight:\n✅ Weekly pay\
+ n✅ Flexible shifts\n✅ Refer-a-friend bonus\n\nTone: bold\, confident\, scro
+ ll-stopping. Green colour scheme to stay on-brand.\n\n💡 Update this event 
+ with the specific role\, location and pay rate before posting.\n\nHashtags:
+  #HealthcareJobs #CucumberRecruitment #HCAJobs #SupportWorker #NursingJobs 
+ #NowHiring
+LAST-MODIFIED:20260529T095944Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: Targeted Recruitment — [ROLE/LOCATION TBC]
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260517T160000Z
+DTEND:20260517T163000Z
+DTSTAMP:20260601T103340Z
+UID:ideu4gbpumnpq5gg49j5l0epcg@google.com
+CREATED:20260506T145905Z
+DESCRIPTION:Platform: LinkedIn & Facebook\\nCategory: Mental Health Awarene
+ ss Week — Close\\n\\n"Mental Health Awareness Week ends today. But looking 
+ after nurses doesn't. Here's what Cucumber does 365 days a year: ✅ 3-monthl
+ y supervisions ✅ 24/7 clinical support ✅ Revalidation support & confirmatio
+ n ✅ NMC fee paid after 1 year's service. Because you deserve an agency that
+  has your back — always. 💙"\\n\\nClose out MHAW with a strong Cucumber ben
+ efits summary. Professional LinkedIn tone. Clear CTA to join Cucumber.\\n\\
+ nHashtags: #MentalHealthAwarenessWeek #NurseWellbeing #CucumberRecruitment 
+ #NursingJobs
+LAST-MODIFIED:20260506T145905Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: MHAW Close — Cucumber Benefits Round-Up ⭐ BOOST THIS
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261201
+DTEND;VALUE=DATE:20261202
+DTSTAMP:20260601T103340Z
+UID:98711aee0v3quuvhjbfc8nf6bc@google.com
+CREATED:20260506T144817Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nInternation
+ al day dedicated to raising awareness of HIV/AIDS.\\n\\n💡 Content tip: Sho
+ w solidarity and share resources for patients and staff.
+LAST-MODIFIED:20260506T144817Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 World AIDS Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260128
+DTEND;VALUE=DATE:20260129
+DTSTAMP:20260601T103340Z
+UID:6sjkb2br6sa1qu8kcjtfg7p77s@google.com
+CREATED:20260506T144441Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nRaises awar
+ eness of Lewy body dementia\, the second most common form of dementia after
+  Alzheimer's.\\n\\n💡 Content tip: Great opportunity to highlight your team
+ 's specialist dementia care expertise.
+LAST-MODIFIED:20260506T144441Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 World Lewy Body Dementia Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260308
+DTEND;VALUE=DATE:20260309
+DTSTAMP:20260601T103340Z
+UID:egicp5n5loopvdmppjuj92o1g0@google.com
+CREATED:20260506T144529Z
+DESCRIPTION:Inclusion & Diversity | Cucumber Marketing Calendar\\n\\nGlobal
+  celebration of women's social\, economic\, cultural and political achievem
+ ents.\\n\\n💡 Content tip: Celebrate the women who make up the backbone of 
+ UK nursing and care.
+LAST-MODIFIED:20260506T144529Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🌸 International Women's Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261104
+DTEND;VALUE=DATE:20261105
+DTSTAMP:20260601T103340Z
+UID:gcjcve5d4ku7ck75fu0rdmcljc@google.com
+CREATED:20260506T144809Z
+DESCRIPTION:Staff Wellbeing | Cucumber Marketing Calendar\\n\\nEstablished 
+ by ISMA — promoting awareness of professional stress and coping strategies 
+ in the workplace.\\n\\n💡 Content tip: The perfect day to post about your q
+ uarterly supervision and 24/7 support offer.
+LAST-MODIFIED:20260506T144809Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:💆 National Stress Awareness Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260201
+DTEND;VALUE=DATE:20260301
+DTSTAMP:20260601T103340Z
+UID:8csi8rmvvhe85ffg673n1skgm8@google.com
+CREATED:20260506T144457Z
+DESCRIPTION:Inclusion & Diversity | Cucumber Marketing Calendar\\n\\nPromot
+ ing equality\, diversity and inclusion across all communities.\\n\\n💡 Cont
+ ent tip: Celebrate the LGBT+ nurses and care workers in your team.
+LAST-MODIFIED:20260506T144457Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🌈 LGBT+ History Month
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260615
+DTEND;VALUE=DATE:20260622
+DTSTAMP:20260601T103340Z
+UID:qootddsg1idll6q2ujt9kq9pfk@google.com
+CREATED:20260506T144701Z
+DESCRIPTION:Care & Support | Cucumber Marketing Calendar\\n\\nMencap's annu
+ al campaign celebrating people with learning disabilities.\\n\\n💡 Content 
+ tip: Celebrate your teams who work in learning disability and supported liv
+ ing.
+LAST-MODIFIED:20260506T144701Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:💚 Learning Disability Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260518
+DTEND;VALUE=DATE:20260525
+DTSTAMP:20260601T103340Z
+UID:5pmrmmq3b4tog0053pjokp8pds@google.com
+CREATED:20260506T144625Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nAlzheimer's
+  Society campaign encouraging communities to take action on dementia.\\n\\n
+ 💡 Content tip: Spotlight your care staff who support people living with de
+ mentia.
+LAST-MODIFIED:20260506T144625Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 Dementia Action Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260204
+DTEND;VALUE=DATE:20260205
+DTSTAMP:20260601T103340Z
+UID:f2ikrej6upladeib5imov30tog@google.com
+CREATED:20260506T144505Z
+DESCRIPTION:Health Awareness | Cucumber Marketing Calendar\\n\\nGlobal camp
+ aign raising awareness of cancer and encouraging prevention and early detec
+ tion.\\n\\n💡 Content tip: Share your team's commitment to compassionate ca
+ ncer care.
+LAST-MODIFIED:20260506T144505Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📅 World Cancer Day
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260505
+DTEND;VALUE=DATE:20260506
+DTSTAMP:20260601T103340Z
+UID:mijh9bqtvarggcm6kp3g9f53o4@google.com
+CREATED:20260506T144553Z
+DESCRIPTION:Nursing & Midwifery | Cucumber Marketing Calendar\\n\\nWHO camp
+ aign to prevent healthcare-associated infections through hand hygiene. Also
+  International Day of the Midwife.\\n\\n💡 Content tip: A powerful reminder
+  of the standards your nurses uphold every day.
+LAST-MODIFIED:20260506T144554Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🏥 World Hand Hygiene Day & International Day of the Midwife
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260505T080000Z
+DTEND:20260505T083000Z
+DTSTAMP:20260601T103340Z
+UID:mbgtk2399gu3hkui60ajfl18rc@google.com
+CREATED:20260506T145654Z
+DESCRIPTION:Platform: Facebook & Instagram\\nCategory: Nursing & Midwifery\
+ \n\\n"The first person most of us ever met was a midwife. Today we celebrat
+ e every one of them. 💙"\\n\\nPost a warm tribute to midwives — share a sta
+ t about midwifery in the UK and tag any midwives in your network. Use a cle
+ an graphic with the Cucumber brand colours.\\n\\nHashtags: #InternationalDa
+ yOfTheMidwife #MidwivesDay #NursingUK #CucumberRecruitment
+LAST-MODIFIED:20260506T145654Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: International Day of the Midwife — Tribute
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260512T080000Z
+DTEND:20260512T083000Z
+DTSTAMP:20260601T103340Z
+UID:r05dcjh0fu0ajo5ve5g35osq1c@google.com
+CREATED:20260506T145820Z
+DESCRIPTION:Platform: Facebook & Instagram & LinkedIn\\nCategory: Nursing &
+  Midwifery — International Nurses Day\\n\\n🕯️ INTERNATIONAL NURSES DAY — F
+ LORENCE NIGHTINGALE'S BIRTHDAY\\n\\n"Today is Florence Nightingale's birthd
+ ay 🕯️ She carried a lamp. Today's nurses carry so much more. On Internatio
+ nal Nurses Day\, and every day — thank you. 💙"\\n\\nBiggest post of the mo
+ nth. Bold Florence Nightingale tribute graphic. Subtly close with Cucumber'
+ s NMC fee message — "We pay your NMC fee after 1 year because your commitme
+ nt deserves recognition." Boost this post.\\n\\n2026 Theme: 'Our Nurses. Ou
+ r Future. The Economic Power of Care.'\\n\\nHashtags: #InternationalNursesD
+ ay #FlorenceNightingale #NursingUK #NMC #CucumberRecruitment
+LAST-MODIFIED:20260508T121429Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: International Nurses Day — Florence Nightingale Tribute ⭐ 
+ BOOST THIS
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260330
+DTEND;VALUE=DATE:20260404
+DTSTAMP:20260601T103340Z
+UID:slj3luk0ucl3k8grpjkmrv32tg@google.com
+CREATED:20260506T144537Z
+DESCRIPTION:Care & Support | Cucumber Marketing Calendar\\n\\nLed by the Na
+ tional Autistic Society — promoting understanding and acceptance of autisti
+ c people.\\n\\n💡 Content tip: Highlight your team's specialist autism and 
+ learning disability support.
+LAST-MODIFIED:20260506T144537Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:💙 World Autism Acceptance Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260529T110000Z
+DTEND:20260529T113000Z
+DTSTAMP:20260601T103340Z
+UID:6u7jtojtrn4kb9ump8su5tujvo@google.com
+CREATED:20260506T145949Z
+DESCRIPTION:Platform: Facebook & Instagram & LinkedIn\\nCategory: General —
+  End of May Wrap-Up\\n\\n"What a month. Nurses Week. Mental Health Awarenes
+ s Week. Dementia Action Week. May reminded us why healthcare matters — and 
+ why the people who deliver it matter even more. 💙 Thank you to every nurse
+ \, HCA and support worker who gave their all this month."\\n\\nEnd of month
+  round-up post. Warm\, reflective tone. Great for brand building. Light CTA
+  — "If you'd like to join a team that genuinely values you\, we'd love to h
+ ear from you."\\n\\nHashtags: #NursingUK #HealthcareHeroes #CucumberRecruit
+ ment #ThankYou
+LAST-MODIFIED:20260506T145949Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📱 POST: End of May Round-Up — Thank You Healthcare
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260914
+DTEND;VALUE=DATE:20260923
+DTSTAMP:20260601T103340Z
+UID:jrcuv7jbvilrq0qki4bck1k1mc@google.com
+CREATED:20260506T144717Z
+DESCRIPTION:Inclusion & Diversity | Cucumber Marketing Calendar\\n\\nCelebr
+ ating inclusion and action to create inclusive workplaces for all marginali
+ sed groups.\\n\\n💡 Content tip: Share Cucumber's values around inclusive h
+ ealthcare recruitment.
+LAST-MODIFIED:20260506T144717Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🤝 National Inclusion Week
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260627T090000Z
+DTEND:20260627T093000Z
+DTSTAMP:20260601T103340Z
+UID:ijgla3i9s98ih36orugkmqgqp4@google.com
+CREATED:20260508T140002Z
+DESCRIPTION:Saturday Spotlight | Cucumber Marketing Calendar\\n\\nPlatform:
+  Facebook\, Instagram & LinkedIn\\n\\n📍 LOCATION: [POSTCODE/AREA TBC]\\n\\
+ nPost a targeted recruitment post for healthcare workers in this postcode a
+ rea. Include roles available\, pay rates and Cucumber benefits.\\n\\n💡 Upd
+ ate this event with the location each week before posting.
+LAST-MODIFIED:20260508T140002Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📍 Saturday Spotlight — [AREA TBC]
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR
