@@ -169,6 +169,15 @@ def upcoming_calendar(limit=20):
         return []
 
 
+# ── Startup ───────────────────────────────────────────────────────────
+
+@app.before_request
+def ensure_ready():
+    init_db()
+    GFX_DIR.mkdir(parents=True, exist_ok=True)
+    PHOTO_DIR.mkdir(parents=True, exist_ok=True)
+
+
 # ── Routes ────────────────────────────────────────────────────────────
 
 @app.route("/")
