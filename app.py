@@ -13,9 +13,10 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT      = Path(__file__).parent
 _CREDS    = Path.home() / ".claude" / ".credentials.json"
 
-# On Railway, use the mounted volume for persistence; locally use project dir
-_DATA     = Path(os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", str(ROOT)))
-PHOTO_DIR = _DATA / "photos" / "web"
+# On Railway use /tmp (always writable); locally use project dir
+_ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+_DATA       = Path("/tmp") if _ON_RAILWAY else ROOT
+PHOTO_DIR   = _DATA / "photos" / "web"
 
 HF_TOKEN  = os.environ.get("HF_TOKEN", "")
 HF_URL    = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
