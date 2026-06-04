@@ -3,10 +3,4 @@ pillow==12.1.1
 numpy==2.4.6
 anthropic==0.103.1
 requests==2.32.5
-rembg==2.0.76
-onnxruntime==1.26.0
-scipy==1.17.1
-scikit-image==0.26.0
-numba==0.65.1
-pooch==1.9.0
 gunicorn==21.2.0

@@ -181,7 +181,11 @@ def _rainbow_bg(img, top, bottom):
 
 
 def _remove_bg(photo_path):
-    """Remove background using rembg; cache result alongside original."""
+    """Remove background using rembg; cache result alongside original.
+    Skipped on Railway (low RAM) — HF photos already have white backgrounds."""
+    import os
+    if os.environ.get("RAILWAY_ENVIRONMENT"):
+        return Image.open(photo_path).convert("RGB")
     import io
     from rembg import remove as rembg_remove
     cache = Path(str(photo_path) + ".rmbg.png")
