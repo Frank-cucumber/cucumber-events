@@ -82,23 +82,54 @@ def _ai_client():
             token = json.load(f)["claudeAiOauth"]["accessToken"]
     return anthropic.Anthropic(auth_token=token)
 
+def ai_image_prompts(event_name, count=5):
+    """Ask Claude for count contextually relevant FLUX image prompts for this event."""
+    client = _ai_client()
+    msg = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=600,
+        messages=[{"role": "user", "content": (
+            f"You are an image prompt writer for a healthcare staffing agency called Cucumber Recruitment.\n"
+            f"Write {count} short FLUX image generation prompts for the event: {event_name}\n\n"
+            f"Each prompt must describe a DIFFERENT person wearing a dark forest green polo shirt "
+            f"and company ID lanyard, relevant to the event theme.\n"
+            f"Vary: gender, age, ethnicity, pose, expression — make each one distinct.\n"
+            f"Keep each prompt under 30 words.\n"
+            f"Return ONLY a JSON array of strings, nothing else:\n"
+            f'["prompt 1", "prompt 2", ...]'
+        )}]
+    )
+    raw = msg.content[0].text.strip()
+    m = re.search(r'\[.*\]', raw, re.DOTALL)
+    if m:
+        raw = m.group(0)
+    prompts = json.loads(raw)
+    return prompts[:count]
+
+
 def fetch_photos(event_name, event_id, count=5):
-    """Generate people in Cucumber uniform via FLUX.1-schnell (HuggingFace free tier)."""
+    """Generate contextual people photos via FLUX.1-schnell (HuggingFace free tier)."""
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     cached = [PHOTO_DIR / f"ev{event_id}_v{i+1}.jpg" for i in range(count)]
     if all(p.exists() for p in cached):
         return [str(p) for p in cached]
 
+    try:
+        context_prompts = ai_image_prompts(event_name, count)
+    except Exception as e:
+        app.logger.error("AI image prompts failed: %s", e)
+        context_prompts = [f"{p}, dark forest green polo shirt, company lanyard"
+                           for p in _UNIFORM_PEOPLE[:count]]
+
     def _generate(args):
         i, out_path = args
         if out_path.exists():
             return str(out_path)
-        person = _UNIFORM_PEOPLE[i % len(_UNIFORM_PEOPLE)]
+        base = context_prompts[i] if i < len(context_prompts) else _UNIFORM_PEOPLE[i % len(_UNIFORM_PEOPLE)]
         prompt = (
-            f"full body photograph of a {person}, "
-            "wearing a dark forest green polo shirt and company ID lanyard, "
-            "standing upright, head to toe, showing full legs and feet, "
-            "pure white background, studio lighting, photorealistic, high quality"
+            f"full body studio photograph, {base}, "
+            "wearing dark forest green polo shirt and company ID lanyard, "
+            "standing upright head to toe, pure white background, photorealistic, high quality"
         )
         try:
             resp = req_lib.post(HF_URL,
