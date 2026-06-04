@@ -17,7 +17,7 @@ _CREDS    = Path.home() / ".claude" / ".credentials.json"
 _DATA     = Path(os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", str(ROOT)))
 PHOTO_DIR = _DATA / "photos" / "web"
 
-HF_TOKEN  = os.environ.get("HF_TOKEN", "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")
+HF_TOKEN  = os.environ.get("HF_TOKEN", "")
 HF_URL    = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
 
 _UNIFORM_PEOPLE = [
@@ -372,9 +372,11 @@ def serve_logo():
     return send_from_directory(ROOT, "cucumber_logo.png")
 
 
+# Always run on startup (works with both gunicorn and direct)
+init_db()
+GFX_DIR.mkdir(parents=True, exist_ok=True)
+PHOTO_DIR.mkdir(parents=True, exist_ok=True)
+
 if __name__ == "__main__":
-    init_db()
-    GFX_DIR.mkdir(parents=True, exist_ok=True)
-    PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
