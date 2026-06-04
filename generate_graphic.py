@@ -181,19 +181,42 @@ def _rainbow_bg(img, top, bottom):
 
 
 def _remove_bg(photo_path):
-    """Remove background using rembg; cache result alongside original.
-    Skipped on Railway (low RAM) — HF photos already have white backgrounds."""
+    """Remove near-white background using threshold + edge smoothing.
+    Works without rembg on Railway. Falls back to rembg locally if available."""
     import os
-    if os.environ.get("RAILWAY_ENVIRONMENT"):
-        return Image.open(photo_path).convert("RGB")
-    import io
-    from rembg import remove as rembg_remove
     cache = Path(str(photo_path) + ".rmbg.png")
     if cache.exists():
         return Image.open(cache).convert("RGB")
-    with open(photo_path, "rb") as f:
-        result = rembg_remove(f.read())
-    rgba = Image.open(io.BytesIO(result)).convert("RGBA")
+
+    on_railway = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+
+    if not on_railway:
+        try:
+            import io
+            from rembg import remove as rembg_remove
+            with open(photo_path, "rb") as f:
+                result = rembg_remove(f.read())
+            rgba = Image.open(io.BytesIO(result)).convert("RGBA")
+            bbox = rgba.getbbox()
+            if bbox:
+                rgba = rgba.crop(bbox)
+            white = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+            rgb = Image.alpha_composite(white, rgba).convert("RGB")
+            rgb.save(cache)
+            return rgb
+        except Exception:
+            pass
+
+    # Lightweight threshold-based removal (works on HF white-background images)
+    img = Image.open(photo_path).convert("RGBA")
+    import numpy as np
+    arr = np.array(img).astype(int)
+    r, g, b = arr[:,:,0], arr[:,:,1], arr[:,:,2]
+    # Near-white: all channels > 230
+    bg_mask = (r > 230) & (g > 230) & (b > 230)
+    arr[bg_mask, 3] = 0
+    rgba = Image.fromarray(arr.astype(np.uint8))
+    # Crop to non-transparent bounding box
     bbox = rgba.getbbox()
     if bbox:
         rgba = rgba.crop(bbox)
@@ -218,14 +241,13 @@ def draw_split(draw, subtext, photo_path=None, rainbow=False):
             photo = _remove_bg(photo_path)
         except Exception:
             photo = Image.open(photo_path).convert("RGB")
-        # Scale to fit zone height (full body visible), anchor feet to bottom-right
+        # Scale to fit zone height (full body visible), centre in zone
         ratio = ph_h / photo.height
         new_w = int(photo.width * ratio)
         photo = photo.resize((new_w, ph_h), Image.LANCZOS)
         canvas = Image.new("RGB", (ph_w, ph_h), WHITE)
-        # Right-align with a small margin
-        x = min(ph_w - new_w, ph_w - new_w)
-        canvas.paste(photo, (ph_w - new_w, 0))
+        x_pos = max(0, (ph_w - new_w) // 2)
+        canvas.paste(photo, (x_pos, 0))
         photo = canvas
         photo = _fade_left(photo, fade_width=200)
         img.paste(photo, (photo_x, SPLIT_Y))
