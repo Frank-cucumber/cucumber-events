@@ -13,12 +13,19 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT      = Path(__file__).parent
 _CREDS    = Path.home() / ".claude" / ".credentials.json"
 
+# Load .env if present (local dev)
+_env_file = ROOT / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        if "=" in _line and not _line.startswith("#"):
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 # On Railway use /tmp (always writable); locally use project dir
 _ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
 _DATA       = Path("/tmp") if _ON_RAILWAY else ROOT
 PHOTO_DIR   = _DATA / "photos" / "web"
 
-HF_TOKEN  = os.environ.get("HF_TOKEN", "")
 HF_URL    = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
 
 _UNIFORM_PEOPLE = [
@@ -76,6 +83,10 @@ def init_db():
 # ── AI tagline generation ─────────────────────────────────────────────
 
 def _ai_client():
+    # Prefer a proper API key (set this on Railway — never expires)
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return anthropic.Anthropic()
+    # Local fallback: use Claude Code OAuth token
     token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
     if not token and _CREDS.exists():
         with open(_CREDS) as f:
@@ -83,18 +94,25 @@ def _ai_client():
     return anthropic.Anthropic(auth_token=token)
 
 def ai_image_prompts(event_name, count=5):
-    """Ask Claude for count contextually relevant FLUX image prompts for this event."""
+    """Ask Claude for count complete FLUX image prompts for this event."""
     client = _ai_client()
     msg = client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=600,
+        max_tokens=800,
         messages=[{"role": "user", "content": (
-            f"You are an image prompt writer for a healthcare staffing agency called Cucumber Recruitment.\n"
-            f"Write {count} short FLUX image generation prompts for the event: {event_name}\n\n"
-            f"Each prompt must describe a DIFFERENT person wearing a dark forest green polo shirt "
-            f"and company ID lanyard, relevant to the event theme.\n"
-            f"Vary: gender, age, ethnicity, pose, expression — make each one distinct.\n"
-            f"Keep each prompt under 30 words.\n"
+            f"You are an image prompt writer for Cucumber Recruitment, a UK healthcare staffing agency.\n"
+            f"Write {count} complete FLUX image generation prompts for the event: {event_name}\n\n"
+            f"Rules:\n"
+            f"- Each prompt must be a COMPLETE, ready-to-use image description — not a subject fragment.\n"
+            f"- Not every image needs a person. Choose what fits the theme:\n"
+            f"  * Recruitment/brand posts → person in dark forest green polo shirt and company ID lanyard\n"
+            f"  * Awareness events (mental health, carers, pride, diabetes, etc.) → real-life scenes: "
+            f"a carer with an elderly relative, hands being held, a diverse crowd, symbolic objects, "
+            f"an empty hospital corridor, a red ribbon, a rainbow — whatever fits the moment\n"
+            f"  * Mix person and non-person images across the {count} variants\n"
+            f"- Always end every prompt with: pure white background, studio lighting, photorealistic, high quality\n"
+            f"- Vary gender, age, and ethnicity when people appear.\n"
+            f"- Keep each prompt under 40 words.\n"
             f"Return ONLY a JSON array of strings, nothing else:\n"
             f'["prompt 1", "prompt 2", ...]'
         )}]
@@ -125,15 +143,13 @@ def fetch_photos(event_name, event_id, count=5):
         i, out_path = args
         if out_path.exists():
             return str(out_path)
-        base = context_prompts[i] if i < len(context_prompts) else _UNIFORM_PEOPLE[i % len(_UNIFORM_PEOPLE)]
-        prompt = (
-            f"full body studio photograph, {base}, "
-            "wearing dark forest green polo shirt and company ID lanyard, "
-            "standing upright head to toe, pure white background, photorealistic, high quality"
+        prompt = context_prompts[i] if i < len(context_prompts) else (
+            f"photorealistic studio photograph, {_UNIFORM_PEOPLE[i % len(_UNIFORM_PEOPLE)]}, "
+            "dark forest green polo shirt, company ID lanyard, white background, high quality"
         )
         try:
             resp = req_lib.post(HF_URL,
-                headers={"Authorization": f"Bearer {HF_TOKEN}"},
+                headers={"Authorization": f"Bearer {os.environ.get('HF_TOKEN', '')}"},
                 json={"inputs": prompt, "parameters": {"width": 512, "height": 1024}},
                 timeout=120)
             if resp.status_code == 200:
