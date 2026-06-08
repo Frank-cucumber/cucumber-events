@@ -126,7 +126,8 @@ def ai_image_prompts(event_name, count=5):
 
 
 def fetch_photos(event_name, event_id, count=5):
-    """Generate contextual people photos via FLUX.1-schnell (HuggingFace free tier)."""
+    """Generate photos via FLUX (HF), falling back to Pollinations.ai if credits run out."""
+    import time, urllib.parse
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     cached = [PHOTO_DIR / f"ev{event_id}_v{i+1}.jpg" for i in range(count)]
     if all(p.exists() for p in cached):
@@ -136,47 +137,60 @@ def fetch_photos(event_name, event_id, count=5):
         context_prompts = ai_image_prompts(event_name, count)
     except Exception as e:
         app.logger.error("AI image prompts failed: %s", e)
-        context_prompts = [f"{p}, dark forest green polo shirt, company lanyard"
-                           for p in _UNIFORM_PEOPLE[:count]]
-
-    def _generate(args):
-        i, out_path = args
-        if out_path.exists():
-            return str(out_path)
-        prompt = context_prompts[i] if i < len(context_prompts) else (
+        context_prompts = [
             f"photorealistic studio photograph, {_UNIFORM_PEOPLE[i % len(_UNIFORM_PEOPLE)]}, "
             "dark forest green polo shirt, company ID lanyard, white background, high quality"
-        )
-        tok = os.environ.get('HF_TOKEN', '')
-        try:
-            resp = req_lib.post(HF_URL,
-                headers={"Authorization": f"Bearer {tok}"},
-                json={"inputs": prompt, "parameters": {"width": 512, "height": 1024}},
-                timeout=120)
-            if resp.status_code == 200:
-                out_path.write_bytes(resp.content)
-                return str(out_path)
-            if resp.status_code == 402:
-                # Credits exhausted — fall back to free Pollinations.ai
-                app.logger.warning("HF credits exhausted, falling back to Pollinations for v%s", i+1)
-                import urllib.parse
-                encoded = urllib.parse.quote(prompt)
-                fallback_url = (f"https://image.pollinations.ai/prompt/{encoded}"
-                                f"?width=512&height=1024&nologo=true&seed={i+42}")
-                resp = req_lib.get(fallback_url, timeout=120)
+            for i in range(count)
+        ]
+
+    tok = os.environ.get('HF_TOKEN', '')
+    paths = []
+    use_pollinations = False  # switch to fallback for all remaining once one 402 hits
+
+    for i, out_path in enumerate(cached):
+        if out_path.exists():
+            paths.append(str(out_path))
+            continue
+        prompt = context_prompts[i] if i < len(context_prompts) else context_prompts[-1]
+
+        result = None
+        if not use_pollinations:
+            try:
+                resp = req_lib.post(HF_URL,
+                    headers={"Authorization": f"Bearer {tok}"},
+                    json={"inputs": prompt, "parameters": {"width": 512, "height": 1024}},
+                    timeout=120)
                 if resp.status_code == 200:
                     out_path.write_bytes(resp.content)
-                    return str(out_path)
-            app.logger.error("HF generate failed v%s: %s %s", i+1, resp.status_code, resp.text[:100])
-        except Exception as e:
-            app.logger.error("HF generate error v%s: %s", i+1, e)
-        return None
+                    result = str(out_path)
+                elif resp.status_code == 402:
+                    app.logger.warning("HF credits exhausted, switching to Pollinations for remaining")
+                    use_pollinations = True
+                else:
+                    app.logger.error("HF failed v%s: %s", i+1, resp.status_code)
+            except Exception as e:
+                app.logger.error("HF error v%s: %s", i+1, e)
 
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        paths = list(pool.map(_generate, [(i, cached[i]) for i in range(count)]))
+        if use_pollinations and result is None:
+            try:
+                if i > 0:
+                    time.sleep(3)  # Pollinations allows 1 request at a time per IP
+                encoded = urllib.parse.quote(prompt)
+                url = (f"https://image.pollinations.ai/prompt/{encoded}"
+                       f"?width=512&height=1024&nologo=true&seed={event_id * 10 + i}")
+                resp = req_lib.get(url,
+                    headers={"User-Agent": "Mozilla/5.0"},
+                    timeout=120)
+                if resp.status_code == 200:
+                    out_path.write_bytes(resp.content)
+                    result = str(out_path)
+                else:
+                    app.logger.error("Pollinations failed v%s: %s", i+1, resp.status_code)
+            except Exception as e:
+                app.logger.error("Pollinations error v%s: %s", i+1, e)
 
-    while len(paths) < count:
-        paths.append(None)
+        paths.append(result)
+
     return paths
 
 
