@@ -26,7 +26,8 @@ _ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
 _DATA       = Path("/tmp") if _ON_RAILWAY else ROOT
 PHOTO_DIR   = _DATA / "photos" / "web"
 
-HF_URL    = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
+HF_URL         = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
+HF_URL_FALLBACK = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
 
 _UNIFORM_PEOPLE = [
     "young Black female healthcare worker, short natural hair, warm smile",
@@ -147,14 +148,25 @@ def fetch_photos(event_name, event_id, count=5):
             f"photorealistic studio photograph, {_UNIFORM_PEOPLE[i % len(_UNIFORM_PEOPLE)]}, "
             "dark forest green polo shirt, company ID lanyard, white background, high quality"
         )
+        tok = os.environ.get('HF_TOKEN', '')
         try:
             resp = req_lib.post(HF_URL,
-                headers={"Authorization": f"Bearer {os.environ.get('HF_TOKEN', '')}"},
+                headers={"Authorization": f"Bearer {tok}"},
                 json={"inputs": prompt, "parameters": {"width": 512, "height": 1024}},
                 timeout=120)
             if resp.status_code == 200:
                 out_path.write_bytes(resp.content)
                 return str(out_path)
+            if resp.status_code == 402:
+                # Credits exhausted — fall back to free SDXL model
+                app.logger.warning("HF credits exhausted, falling back to SDXL for v%s", i+1)
+                resp = req_lib.post(HF_URL_FALLBACK,
+                    headers={"Authorization": f"Bearer {tok}"},
+                    json={"inputs": prompt},
+                    timeout=120)
+                if resp.status_code == 200:
+                    out_path.write_bytes(resp.content)
+                    return str(out_path)
             app.logger.error("HF generate failed v%s: %s %s", i+1, resp.status_code, resp.text[:100])
         except Exception as e:
             app.logger.error("HF generate error v%s: %s", i+1, e)
