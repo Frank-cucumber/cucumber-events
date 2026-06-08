@@ -126,7 +126,7 @@ def ai_image_prompts(event_name, count=5):
 
 
 def fetch_photos(event_name, event_id, count=5):
-    """Generate photos via FLUX (HF), falling back to Pollinations.ai if credits run out."""
+    """Generate photos via FLUX.1-schnell on HuggingFace."""
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     cached = [PHOTO_DIR / f"ev{event_id}_v{i+1}.jpg" for i in range(count)]
     if all(p.exists() for p in cached):
@@ -143,57 +143,27 @@ def fetch_photos(event_name, event_id, count=5):
         ]
 
     tok = os.environ.get('HF_TOKEN', '')
-    paths = []
-    use_pollinations = False  # switch to fallback for all remaining once one 402 hits
 
-    for i, out_path in enumerate(cached):
+    def _generate(args):
+        i, out_path = args
         if out_path.exists():
-            paths.append(str(out_path))
-            continue
+            return str(out_path)
         prompt = context_prompts[i] if i < len(context_prompts) else context_prompts[-1]
+        try:
+            resp = req_lib.post(HF_URL,
+                headers={"Authorization": f"Bearer {tok}"},
+                json={"inputs": prompt, "parameters": {"width": 512, "height": 1024}},
+                timeout=120)
+            if resp.status_code == 200:
+                out_path.write_bytes(resp.content)
+                return str(out_path)
+            app.logger.error("HF failed v%s: %s %s", i+1, resp.status_code, resp.text[:80])
+        except Exception as e:
+            app.logger.error("HF error v%s: %s", i+1, e)
+        return None
 
-        result = None
-        if not use_pollinations:
-            try:
-                resp = req_lib.post(HF_URL,
-                    headers={"Authorization": f"Bearer {tok}"},
-                    json={"inputs": prompt, "parameters": {"width": 512, "height": 1024}},
-                    timeout=120)
-                if resp.status_code == 200:
-                    out_path.write_bytes(resp.content)
-                    result = str(out_path)
-                elif resp.status_code == 402:
-                    app.logger.warning("HF credits exhausted, switching to Pollinations for remaining")
-                    use_pollinations = True
-                else:
-                    app.logger.error("HF failed v%s: %s", i+1, resp.status_code)
-            except Exception as e:
-                app.logger.error("HF error v%s: %s", i+1, e)
-
-        if use_pollinations and result is None:
-            try:
-                pexels_key = os.environ.get('PEXELS_API_KEY', '')
-                search = re.sub(r"\b(week|day|month|awareness|national|world|international)\b", "",
-                                event_name, flags=re.IGNORECASE).strip()
-                resp = req_lib.get("https://api.pexels.com/v1/search",
-                    headers={"Authorization": pexels_key},
-                    params={"query": search, "per_page": 5, "orientation": "portrait",
-                            "page": (i % 3) + 1},
-                    timeout=30)
-                if resp.status_code == 200:
-                    photos = resp.json().get("photos", [])
-                    if photos:
-                        img_url = photos[i % len(photos)]["src"]["large"]
-                        img = req_lib.get(img_url, timeout=60)
-                        if img.status_code == 200:
-                            out_path.write_bytes(img.content)
-                            result = str(out_path)
-                else:
-                    app.logger.error("Pexels failed v%s: %s", i+1, resp.status_code)
-            except Exception as e:
-                app.logger.error("Pexels error v%s: %s", i+1, e)
-
-        paths.append(result)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        paths = list(pool.map(_generate, enumerate(cached)))
 
     return paths
 
