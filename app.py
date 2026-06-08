@@ -127,7 +127,6 @@ def ai_image_prompts(event_name, count=5):
 
 def fetch_photos(event_name, event_id, count=5):
     """Generate photos via FLUX (HF), falling back to Pollinations.ai if credits run out."""
-    import time, urllib.parse
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     cached = [PHOTO_DIR / f"ev{event_id}_v{i+1}.jpg" for i in range(count)]
     if all(p.exists() for p in cached):
@@ -173,21 +172,26 @@ def fetch_photos(event_name, event_id, count=5):
 
         if use_pollinations and result is None:
             try:
-                if i > 0:
-                    time.sleep(3)  # Pollinations allows 1 request at a time per IP
-                encoded = urllib.parse.quote(prompt)
-                url = (f"https://image.pollinations.ai/prompt/{encoded}"
-                       f"?width=512&height=1024&nologo=true&seed={event_id * 10 + i}")
-                resp = req_lib.get(url,
-                    headers={"User-Agent": "Mozilla/5.0"},
-                    timeout=120)
+                pexels_key = os.environ.get('PEXELS_API_KEY', '')
+                search = re.sub(r"\b(week|day|month|awareness|national|world|international)\b", "",
+                                event_name, flags=re.IGNORECASE).strip()
+                resp = req_lib.get("https://api.pexels.com/v1/search",
+                    headers={"Authorization": pexels_key},
+                    params={"query": search, "per_page": 5, "orientation": "portrait",
+                            "page": (i % 3) + 1},
+                    timeout=30)
                 if resp.status_code == 200:
-                    out_path.write_bytes(resp.content)
-                    result = str(out_path)
+                    photos = resp.json().get("photos", [])
+                    if photos:
+                        img_url = photos[i % len(photos)]["src"]["large"]
+                        img = req_lib.get(img_url, timeout=60)
+                        if img.status_code == 200:
+                            out_path.write_bytes(img.content)
+                            result = str(out_path)
                 else:
-                    app.logger.error("Pollinations failed v%s: %s", i+1, resp.status_code)
+                    app.logger.error("Pexels failed v%s: %s", i+1, resp.status_code)
             except Exception as e:
-                app.logger.error("Pollinations error v%s: %s", i+1, e)
+                app.logger.error("Pexels error v%s: %s", i+1, e)
 
         paths.append(result)
 
