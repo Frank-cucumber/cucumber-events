@@ -26,8 +26,7 @@ _ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
 _DATA       = Path("/tmp") if _ON_RAILWAY else ROOT
 PHOTO_DIR   = _DATA / "photos" / "web"
 
-HF_URL         = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
-HF_URL_FALLBACK = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+HF_URL = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
 
 _UNIFORM_PEOPLE = [
     "young Black female healthcare worker, short natural hair, warm smile",
@@ -158,12 +157,13 @@ def fetch_photos(event_name, event_id, count=5):
                 out_path.write_bytes(resp.content)
                 return str(out_path)
             if resp.status_code == 402:
-                # Credits exhausted — fall back to free SDXL model
-                app.logger.warning("HF credits exhausted, falling back to SDXL for v%s", i+1)
-                resp = req_lib.post(HF_URL_FALLBACK,
-                    headers={"Authorization": f"Bearer {tok}"},
-                    json={"inputs": prompt},
-                    timeout=120)
+                # Credits exhausted — fall back to free Pollinations.ai
+                app.logger.warning("HF credits exhausted, falling back to Pollinations for v%s", i+1)
+                import urllib.parse
+                encoded = urllib.parse.quote(prompt)
+                fallback_url = (f"https://image.pollinations.ai/prompt/{encoded}"
+                                f"?width=512&height=1024&nologo=true&seed={i+42}")
+                resp = req_lib.get(fallback_url, timeout=120)
                 if resp.status_code == 200:
                     out_path.write_bytes(resp.content)
                     return str(out_path)
