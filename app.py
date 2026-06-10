@@ -211,7 +211,9 @@ _HORDE_CHECK  = "https://stablehorde.net/api/v2/generate/check/{}"
 _HORDE_STATUS = "https://stablehorde.net/api/v2/generate/status/{}"
 _HORDE_KEY    = "0000000000"  # anonymous free key
 
+import threading
 _gen_jobs: dict = {}  # event_id -> {"total": N, "done": M, "failed": K, "complete": bool}
+_jobs_lock = threading.Lock()
 
 
 def _horde_one(prompt, out_path):
@@ -274,7 +276,8 @@ def _horde_background(event_id, variant_dicts, prompts):
     out_dir = GFX_DIR / str(event_id)
     out_dir.mkdir(parents=True, exist_ok=True)
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
-    _gen_jobs[event_id] = {"total": len(todo), "done": 0, "failed": 0, "complete": False}
+    with _jobs_lock:
+        _gen_jobs[event_id] = {"total": len(todo), "done": 0, "failed": 0, "complete": False}
     all_nums = [v["variant_num"] for v in variant_dicts]
 
     for v in todo:
@@ -292,17 +295,21 @@ def _horde_background(event_id, variant_dicts, prompts):
                         "UPDATE variants SET image_path=?, generated_at=? WHERE id=?",
                         (str(out), datetime.utcnow().isoformat(), v["id"])
                     )
-                _gen_jobs[event_id]["done"] += 1
+                with _jobs_lock:
+                    _gen_jobs[event_id]["done"] += 1
                 app.logger.info("Horde variant %s done (%s/%s)",
                                 v["variant_num"], _gen_jobs[event_id]["done"],
                                 _gen_jobs[event_id]["total"])
             except Exception as e:
                 app.logger.error("Horde render v%s: %s", v["variant_num"], e)
-                _gen_jobs[event_id]["failed"] += 1
+                with _jobs_lock:
+                    _gen_jobs[event_id]["failed"] += 1
         else:
-            _gen_jobs[event_id]["failed"] += 1
+            with _jobs_lock:
+                _gen_jobs[event_id]["failed"] += 1
 
-    _gen_jobs[event_id]["complete"] = True
+    with _jobs_lock:
+        _gen_jobs[event_id]["complete"] = True
     app.logger.info("Horde background complete for event %s: %s", event_id, _gen_jobs[event_id])
 
 
@@ -537,6 +544,7 @@ def generate_images(event_id):
         variants = db.execute(
             "SELECT * FROM variants WHERE event_id=? ORDER BY variant_num", (event_id,)
         ).fetchall()
+        flash(f"Regenerated {len(redo_ids)} image variants", "success")
 
     # Generate image prompts via Claude
     redo_indices = [i for i, v in enumerate(variants) if v["id"] in redo_ids] if redo_ids else None

@@ -203,14 +203,30 @@ def _remove_bg(photo_path):
 
     # Improved threshold-based removal
     img = Image.open(photo_path).convert("RGBA")
+    # Resize large images for faster processing
+    if max(img.width, img.height) > 1024:
+        ratio = 1024 / max(img.width, img.height)
+        new_w = int(img.width * ratio)
+        new_h = int(img.height * ratio)
+        img = img.resize((new_w, new_h), Image.LANCZOS)
+
     import numpy as np
     arr = np.array(img).astype(int)
     r, g, b = arr[:,:,0], arr[:,:,1], arr[:,:,2]
     # Near-white: all channels > 235 OR average > 240
     bg_mask = ((r > 235) & (g > 235) & (b > 235)) | ((r+g+b) > 720)
     # Also remove pixels adjacent to background
-    from scipy.ndimage import binary_dilation
-    dilated_mask = binary_dilation(bg_mask, iterations=1)
+    try:
+        from scipy.ndimage import binary_dilation
+        dilated_mask = binary_dilation(bg_mask, iterations=1)
+    except ImportError:
+        # Simple fallback: use 4-connected dilation
+        dilated_mask = bg_mask.copy()
+        dilated_mask[1:]   |= bg_mask[:-1]   # down
+        dilated_mask[:-1]  |= bg_mask[1:]    # up
+        dilated_mask[:,1:] |= bg_mask[:,:-1] # right
+        dilated_mask[:,:-1]|= bg_mask[:,1:]  # left
+
     arr[dilated_mask, 3] = 0
     rgba = Image.fromarray(arr.astype(np.uint8))
     # Crop to non-transparent bounding box
