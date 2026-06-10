@@ -175,7 +175,7 @@ def _rainbow_bg(img, top, bottom):
 
 
 def _remove_bg(photo_path):
-    """Remove near-white background using threshold + edge smoothing.
+    """Remove near-white background using improved thresholding.
     Works without rembg on Railway. Falls back to rembg locally if available."""
     import os
     cache = Path(str(photo_path) + ".rmbg.png")
@@ -201,14 +201,17 @@ def _remove_bg(photo_path):
         except Exception:
             pass
 
-    # Lightweight threshold-based removal (works on HF white-background images)
+    # Improved threshold-based removal
     img = Image.open(photo_path).convert("RGBA")
     import numpy as np
     arr = np.array(img).astype(int)
     r, g, b = arr[:,:,0], arr[:,:,1], arr[:,:,2]
-    # Near-white: all channels > 230
-    bg_mask = (r > 230) & (g > 230) & (b > 230)
-    arr[bg_mask, 3] = 0
+    # Near-white: all channels > 235 OR average > 240
+    bg_mask = ((r > 235) & (g > 235) & (b > 235)) | ((r+g+b) > 720)
+    # Also remove pixels adjacent to background
+    from scipy.ndimage import binary_dilation
+    dilated_mask = binary_dilation(bg_mask, iterations=1)
+    arr[dilated_mask, 3] = 0
     rgba = Image.fromarray(arr.astype(np.uint8))
     # Crop to non-transparent bounding box
     bbox = rgba.getbbox()

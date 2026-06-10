@@ -136,32 +136,38 @@ def ai_image_prompts(event_name, count=5, redo_indices=None):
     approach_list = "\n".join(f"  Variant {i+1}: {a}" for i, a in enumerate(approaches))
 
     client = _ai_client()
-    msg = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=900,
-        messages=[{"role": "user", "content": (
-            f"You are an image prompt writer for Cucumber Recruitment, a UK healthcare staffing agency.\n"
-            f"Write {count} image generation prompts for the event: {event_name}\n"
-            f"{redo_note}\n\n"
-            f"Each variant MUST use the visual approach assigned to it — no swapping:\n"
-            f"{approach_list}\n\n"
-            f"Rules:\n"
-            f"- Each prompt must be a COMPLETE image description built around its assigned approach.\n"
-            f"- For awareness events (mental health, carers, pride, etc.) use real human scenes or powerful symbols.\n"
-            f"- For recruitment posts use a person in a dark forest green polo shirt and company lanyard.\n"
-            f"- Always end every prompt with: pure white background, studio lighting, photorealistic, sharp focus, 8k\n"
-            f"- Vary gender, age, and ethnicity when people appear.\n"
-            f"- Keep each prompt under 60 words.\n"
-            f"Return ONLY a JSON array of {count} strings:\n"
-            f'["prompt 1", "prompt 2", ...]'
-        )}]
-    )
-    raw = msg.content[0].text.strip()
-    m = re.search(r'\[.*\]', raw, re.DOTALL)
-    if m:
-        raw = m.group(0)
-    prompts = json.loads(raw)
-    return prompts[:count]
+    for attempt in range(3):
+        try:
+            msg = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=900,
+                messages=[{"role": "user", "content": (
+                    f"You are an image prompt writer for Cucumber Recruitment, a UK healthcare staffing agency.\n"
+                    f"Write {count} image generation prompts for the event: {event_name}\n"
+                    f"{redo_note}\n\n"
+                    f"Each variant MUST use the visual approach assigned to it — no swapping:\n"
+                    f"{approach_list}\n\n"
+                    f"Rules:\n"
+                    f"- Each prompt must be a COMPLETE image description built around its assigned approach.\n"
+                    f"- For awareness events (mental health, carers, pride, etc.) use real human scenes or powerful symbols.\n"
+                    f"- For recruitment posts use a person in a dark forest green polo shirt and company lanyard.\n"
+                    f"- Always end every prompt with: pure white background, studio lighting, photorealistic, sharp focus, 8k\n"
+                    f"- Vary gender, age, and ethnicity when people appear.\n"
+                    f"- Keep each prompt under 60 words.\n"
+                    f"Return ONLY a JSON array of {count} strings:\n"
+                    f'["prompt 1", "prompt 2", ...]'
+                )}]
+            )
+            raw = msg.content[0].text.strip()
+            m = re.search(r'\[.*\]', raw, re.DOTALL)
+            if m:
+                raw = m.group(0)
+            prompts = json.loads(raw)
+            return prompts[:count]
+        except (json.JSONDecodeError, IndexError, KeyError) as e:
+            app.logger.warning("AI prompt generation attempt %s failed: %s", attempt+1, e)
+            if attempt == 2:
+                raise
 
 
 # ── Nano Banana (Google Imagen 3 / Gemini image generation) ──────────
@@ -304,32 +310,37 @@ def ai_generate_taglines(event_name, event_date=None):
     client = _ai_client()
     date_hint = f" (date: {event_date})" if event_date else ""
 
-    msg = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=600,
-        messages=[{
-            "role": "user",
-            "content": (
-                f"You are a copywriter for Cucumber Recruitment, a UK healthcare staffing agency.\n"
-                f"Generate 5 unique social media graphic taglines for the event: {event_name}{date_hint}\n\n"
-                f"Rules:\n"
-                f"- HEADLINE: 2–5 words, ALL CAPS, punchy and direct\n"
-                f"- SUBTEXT: 5–8 words, ALL CAPS, warm and supportive\n"
-                f"- Each of the 5 must feel distinct — vary the angle\n"
-                f"- Mention 'CUCUMBER RECRUITMENT' or 'CUCUMBER' in 1–2 subtexts\n"
-                f"- No hashtags, no emojis, no punctuation beyond full stops and commas\n\n"
-                f"Return ONLY a JSON array, nothing else:\n"
-                f'[{{"headline": "...", "subtext": "..."}}, ...]'
+    for attempt in range(3):
+        try:
+            msg = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=600,
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        f"You are a copywriter for Cucumber Recruitment, a UK healthcare staffing agency.\n"
+                        f"Generate 5 unique social media graphic taglines for the event: {event_name}{date_hint}\n\n"
+                        f"Rules:\n"
+                        f"- HEADLINE: 2–5 words, ALL CAPS, punchy and direct\n"
+                        f"- SUBTEXT: 5–8 words, ALL CAPS, warm and supportive\n"
+                        f"- Each of the 5 must feel distinct — vary the angle\n"
+                        f"- Mention 'CUCUMBER RECRUITMENT' or 'CUCUMBER' in 1–2 subtexts\n"
+                        f"- No hashtags, no emojis, no punctuation beyond full stops and commas\n\n"
+                        f"Return ONLY a JSON array, nothing else:\n"
+                        f'[{{"headline": "...", "subtext": "..."}}, ...]'
+                    )
+                }]
             )
-        }]
-    )
-
-    raw = msg.content[0].text.strip()
-    match = re.search(r'\[.*\]', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-    pairs = json.loads(raw)
-    return [(p["headline"].upper(), p["subtext"].upper()) for p in pairs[:5]]
+            raw = msg.content[0].text.strip()
+            match = re.search(r'\[.*\]', raw, re.DOTALL)
+            if match:
+                raw = match.group(0)
+            pairs = json.loads(raw)
+            return [(p["headline"].upper(), p["subtext"].upper()) for p in pairs[:5]]
+        except (json.JSONDecodeError, IndexError, KeyError) as e:
+            app.logger.warning("AI tagline generation attempt %s failed: %s", attempt+1, e)
+            if attempt == 2:
+                raise
 
 
 # ── Calendar ─────────────────────────────────────────────────────────
@@ -533,11 +544,9 @@ def generate_images(event_id):
         prompts = ai_image_prompts(event["name"], len(variants), redo_indices=redo_indices)
     except Exception as e:
         app.logger.error("Prompts failed: %s", e)
-        prompts = [
-            f"photorealistic studio photograph, {_UNIFORM_PEOPLE[i % len(_UNIFORM_PEOPLE)]}, "
-            "dark forest green polo shirt, company ID lanyard, white background, high quality"
-            for i in range(len(variants))
-        ]
+        flash(f"Could not generate image prompts: {e}", "error")
+        db.close()
+        return redirect(url_for("event_detail", event_id=event_id))
 
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     out_dir = GFX_DIR / str(event_id)
