@@ -399,8 +399,8 @@ def generate_from_calendar(event_num):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cucumber Recruitment graphic generator")
-    parser.add_argument("--headline", help="Large headline text")
-    parser.add_argument("--subtext",  help="Supporting message text (left panel)")
+    parser.add_argument("--headline", nargs='*', help="Large headline text")
+    parser.add_argument("--subtext",  nargs='*', help="Supporting message text (left panel)")
     parser.add_argument("--url",      default="cucumber-recruitment.co.uk")
     parser.add_argument("--out",      default="graphic.png", help="Output PNG filename")
     parser.add_argument("--list",     action="store_true", help="List upcoming calendar events")
@@ -414,8 +414,10 @@ if __name__ == "__main__":
         else:
             list_upcoming()
     elif args.headline and args.subtext:
+        headline_str = ' '.join(args.headline)
+        subtext_str = ' '.join(args.subtext)
         out = args.out if args.out != "graphic.png" else "graphic.png"
-        generate(args.headline, args.subtext, args.url, out)
+        generate(headline_str, subtext_str, args.url, out)
     else:
         parser.print_help()
         print("\nExamples:")
