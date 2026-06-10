@@ -865,5 +865,7 @@ h3 {
   }
 
   .event-header-actions { width: 100%; }
+  .generate-box { flex-direction: column; align-items: flex-start; }
+  .redo-bar { flex-direction: column; align-items: stretch; }
   .redo-bar-actions { flex-direction: column; align-items: stretch; }
 }

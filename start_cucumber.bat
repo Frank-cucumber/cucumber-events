@@ -2,8 +2,7 @@
 cd /d "C:\Users\joe\Downloads\Events project"
 if not exist logs mkdir logs
 
-:: API tokens
-set NANO_BANANA_KEY=AIzaSyDTthx8BsgWIz3vJ8sFjcHQ_Tz2HgGnSBM
+:: API tokens loaded from .env by app.py on startup
 
 :: Start Flask server
 start "" /B python app.py > logs\flask.log 2>&1

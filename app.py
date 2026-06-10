@@ -191,13 +191,11 @@ def _fallback_image_prompts(event_name, count=5):
     s_app    = random.sample(_SCENE_APPROACHES, min(count - 2, len(_SCENE_APPROACHES)))
 
     prompts = []
-    # 2 person-in-uniform shots
     for person, approach in zip(people, p_app):
         prompts.append(
             f"{person}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
             f"{event_name} theme. {approach}. Photorealistic, sharp focus, 8k."
         )
-    # Remaining slots: contextual/symbolic, no person needed
     for approach in s_app[:count - 2]:
         prompts.append(
             f"Photorealistic image. {approach.format(event=event_name)}. Sharp focus, 8k."
@@ -233,6 +231,17 @@ _SCENE_APPROACHES = [
     "close-up of hands in a meaningful gesture related to {event}, warm intimate lighting, shallow depth of field, blurred background",
     "bold graphic composition: a single powerful symbolic object representing {event}, centred, minimal, striking colours, clean background",
     "environmental wide shot capturing the feeling of {event}, real-world setting, documentary style, warm and human",
+]
+
+_VISUAL_APPROACHES = [
+    "tight portrait, direct eye contact with camera, shallow depth of field, warm bokeh background",
+    "wide shot, person centred in frame, sense of space and purpose",
+    "candid side-on moment, subject unaware, natural documentary feel",
+    "group of 2-3 people interacting, human connection, warm and natural light",
+    "action shot mid-movement, energy and dynamism, motion blur background",
+    "moody split lighting, half shadow half warm light, contemplative expression",
+    "low angle looking up at subject, confident and empowering",
+    "subject looking off-camera, thoughtful and engaged",
 ]
 
 def _custom_image_prompts(scene_description, count=5):

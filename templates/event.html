@@ -155,10 +155,6 @@
 
 function syncVisionAndSubmit(btn, formId) {
   var vision = document.getElementById('vision-input').value.trim();
-  var hidden = document.getElementById(formId.replace('-form', '') === formId
-    ? formId + '-prompt-hidden'
-    : formId.replace('form', 'prompt-hidden'));
-  // Map form id → hidden input id
   var hiddenMap = {
     'gen-form':     'gen-prompt-hidden',
     'missing-form': 'missing-prompt-hidden',

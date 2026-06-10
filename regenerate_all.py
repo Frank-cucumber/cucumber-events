@@ -4,7 +4,13 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
-os.environ.setdefault("NANO_BANANA_KEY", "AIzaSyDTthx8BsgWIz3vJ8sFjcHQ_Tz2HgGnSBM")
+# Load key from .env if not already in environment
+_env = Path(__file__).parent / ".env"
+if _env.exists():
+    for _line in _env.read_text().splitlines():
+        if "=" in _line and not _line.startswith("#"):
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
@@ -62,6 +68,7 @@ def get_scene_prompts(event_name):
         f"atmospheric scene capturing the spirit of {event_name}, golden hour light, no people, photojournalistic",
         f"hands in a meaningful gesture related to {event_name}, warm intimate lighting, shallow depth of field",
     ]
+
 
 
 def nb_photo(prompt, out_path):
