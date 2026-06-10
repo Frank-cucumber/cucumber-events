@@ -2,67 +2,69 @@
 {% block title %}Cucumber Events Studio{% endblock %}
 
 {% block content %}
-
-{% if calendar %}
 <section>
-  <h2>Upcoming Calendar Events</h2>
-  <div class="cal-list">
-    {% for ev_date, name, desc in calendar %}
-    <div class="cal-row">
-      <span class="cal-date">{{ ev_date.strftime('%d %b') }}</span>
-      <span class="cal-name">{{ name }}</span>
-      <a class="btn-sm"
-         href="{{ url_for('new_event', name=name, date=ev_date.isoformat(), source='calendar') }}">
-        Use event →
-      </a>
-    </div>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
+  <h2>Events</h2>
 
-<section>
-  <h2>Your Events</h2>
-
-  {% if not events %}
-  <p class="empty">No events yet. Pick one from the calendar above or create a new one.</p>
+  {% if not merged %}
+  <p class="empty">No events yet. Click <strong>+ New Event</strong> to get started.</p>
   {% else %}
-  <div class="event-grid">
-    {% for e in events %}
+  <div class="cal-list">
+    {% for item in merged %}
+
+    {% if item.kind == "event" %}
+    {% set e = item.row %}
     {% set generated = e['generated_count'] == e['variant_count'] and e['variant_count'] > 0 %}
-    <div class="card">
-      <div class="card-top">
-        <div>
-          <strong>{{ e['name'] }}</strong>
-          {% if e['event_date'] %}
-          <span class="meta-date">{{ e['event_date'] }}</span>
-          {% endif %}
-        </div>
-        {% if generated %}
-          {% if e['vote_count'] > 0 %}
-          <span class="badge badge-voted">{{ e['vote_count'] }} vote{{ 's' if e['vote_count'] != 1 }}</span>
-          {% else %}
-          <span class="badge badge-ready">Ready to vote</span>
-          {% endif %}
+    <div class="cal-row">
+      <span class="cal-date">
+        {% if item.date %}{{ item.date.strftime('%d %b') }}{% else %}—{% endif %}
+      </span>
+      <span class="cal-name">{{ e['name'] }}</span>
+      {% if generated %}
+        {% if e['vote_count'] > 0 %}
+        <span class="badge badge-voted">{{ e['vote_count'] }} vote{{ 's' if e['vote_count'] != 1 }}</span>
         {% else %}
-          <span class="badge badge-draft">Draft</span>
+        <span class="badge badge-ready">Ready to vote</span>
         {% endif %}
-      </div>
-      <div class="card-meta">
-        {{ e['variant_count'] }} variant{{ 's' if e['variant_count'] != 1 }}
-        {% if generated %} · images generated{% endif %}
-      </div>
-      <div class="card-actions">
+      {% elif e['variant_count'] > 0 %}
+        <span class="badge badge-draft">Needs images</span>
+      {% else %}
+        <span class="badge badge-draft">Draft</span>
+      {% endif %}
+      <div class="cal-actions">
         <a class="btn-sm" href="{{ url_for('event_detail', event_id=e['id']) }}">View</a>
         {% if generated %}
         <a class="btn-sm btn-outline" href="{{ url_for('vote', event_id=e['id']) }}">Vote</a>
         <a class="btn-sm btn-outline" href="{{ url_for('results', event_id=e['id']) }}">Results</a>
         {% endif %}
+        <button class="btn-delete" type="button" style="padding:4px 10px;font-size:0.8rem;"
+                onclick="deleteEvent({{ e['id'] }}, this)">Delete</button>
       </div>
     </div>
+
+    {% else %}
+    <div class="cal-row cal-row-upcoming">
+      <span class="cal-date">{{ item.date.strftime('%d %b') }}</span>
+      <span class="cal-name">{{ item.name }}</span>
+      <span class="badge badge-upcoming">Upcoming</span>
+      <div class="cal-actions">
+        <a class="btn-sm"
+           href="{{ url_for('new_event', name=item.name, date=item.date_iso, source='calendar') }}">
+          Use event →
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
     {% endfor %}
   </div>
   {% endif %}
 </section>
 
+<script>
+function deleteEvent(id, btn) {
+  if (!confirm('Delete this event?')) return;
+  fetch('/events/' + id + '/delete', {method: 'POST'})
+    .then(function() { btn.closest('.cal-row').remove(); });
+}
+</script>
 {% endblock %}

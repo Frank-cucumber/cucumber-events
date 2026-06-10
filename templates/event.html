@@ -17,18 +17,50 @@
       <a class="btn" href="{{ url_for('vote', event_id=event['id']) }}">Vote on images</a>
       <a class="btn-outline" href="{{ url_for('results', event_id=event['id']) }}">Results</a>
       {% endif %}
+      {% if has_any_images %}
+      <form method="post" action="{{ url_for('clear_images', event_id=event['id']) }}"
+            onsubmit="return confirm('Remove all images? The event and taglines are kept.')">
+        <button class="btn-delete" type="submit">Clear images</button>
+      </form>
+      {% endif %}
       <form method="post" action="{{ url_for('delete_event', event_id=event['id']) }}"
             onsubmit="return confirm('Delete this event?')">
-        <button class="btn-delete" type="submit">Delete</button>
+        <button class="btn-delete" type="submit">Delete event</button>
       </form>
     </div>
   </div>
 
-  {% if not all_generated %}
+  {% if not variants %}
   <div class="generate-box">
     <p>Click to generate 5 images — AI will write the taglines automatically.</p>
     <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}">
-      <button class="btn" type="submit">Generate Images</button>
+      <button class="btn" type="submit" id="generate-btn"
+              onclick="this.disabled=true; this.form.submit();">Generate Images</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if variants %}
+
+  {% if generating %}
+  <div class="generating-banner">
+    <span class="spinner"></span>
+    <span>
+      Generating images —
+      {% if gen_progress %}
+        {{ gen_progress.done }}/{{ gen_progress.total }} done
+      {% else %}
+        please wait
+      {% endif %}
+      — page refreshes automatically
+    </span>
+  </div>
+  {% elif not all_generated %}
+  <div class="generate-box">
+    <p>Some images are missing. Click to generate them.</p>
+    <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}">
+      <button class="btn" type="submit"
+              onclick="this.disabled=true; this.form.submit();">Generate Missing</button>
     </form>
   </div>
   {% endif %}
@@ -43,31 +75,99 @@
   </div>
   {% endif %}
 
-  <div class="image-grid">
-    {% for v in variants %}
-    <div class="image-card">
-      {% if v['image_path'] %}
-      <img src="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}"
-           alt="Variant {{ v['variant_num'] }}">
-      {% else %}
-      <div class="img-placeholder">Not yet generated</div>
-      {% endif %}
-      <div class="image-card-body">
-        <div class="variant-label">Variant {{ v['variant_num'] }}</div>
-        <strong>{{ v['headline'] }}</strong>
-        <span>{{ v['subtext'] }}</span>
-        {% if v['vote_count'] > 0 %}
-        <div class="vote-chip">{{ v['vote_count'] }} vote{{ 's' if v['vote_count'] != 1 }}</div>
+  <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}" id="redo-form">
+    <div class="image-grid">
+      {% for v in variants %}
+      <div class="image-card" id="card-{{ v['id'] }}">
+        {% if v['image_path'] %}
+        <div class="card-img-wrap">
+          <img src="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}"
+               alt="Variant {{ v['variant_num'] }}">
+          <label class="card-select-overlay" title="Select to redo">
+            <input type="checkbox" id="redo-{{ v['id'] }}" name="redo" value="{{ v['id'] }}"
+                   onchange="updateRedoBar()">
+            <span class="card-checkmark"></span>
+          </label>
+        </div>
+        {% else %}
+        <div class="img-placeholder">Generating…</div>
         {% endif %}
+        <div class="image-card-body">
+          <div class="variant-label">Variant {{ v['variant_num'] }}</div>
+          <strong>{{ v['headline'] }}</strong>
+          <span>{{ v['subtext'] }}</span>
+          {% if v['vote_count'] > 0 %}
+          <div class="vote-chip">{{ v['vote_count'] }} vote{{ 's' if v['vote_count'] != 1 }}</div>
+          {% endif %}
+          {% if v['image_path'] %}
+          <a class="download-btn"
+             href="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}"
+             download="Cucumber_{{ event['name']|replace(' ', '_') }}_v{{ v['variant_num'] }}.png">
+            ↓ Save image
+          </a>
+          {% endif %}
+        </div>
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
+
+    {% if has_any_images %}
+    <div class="redo-bar">
+      <span class="redo-count-text" id="redo-count">Select images to regenerate — unchecked images are kept</span>
+      <button type="button" class="btn-sm btn-outline" id="select-all-btn" onclick="toggleSelectAll()">Select All</button>
+      <button type="submit" class="btn" id="redo-btn" disabled
+              onclick="this.disabled=true; this.form.submit();">Redo Selected</button>
+    </div>
+    {% endif %}
+  </form>
+
+  {% endif %}
 </section>
 
 <script>
+{% if generating or (variants and not all_generated) %}
+(function poll() {
+  fetch("{{ url_for('gen_status', event_id=event['id']) }}")
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.generating || d.done < d.total) {
+        setTimeout(poll, 3000);
+      } else if (d.done > 0) {
+        location.reload();
+      }
+    })
+    .catch(function() { setTimeout(poll, 5000); });
+})();
+{% endif %}
+
+function updateRedoBar() {
+  var boxes = Array.from(document.querySelectorAll('#redo-form input[type="checkbox"]'));
+  var checked = boxes.filter(function(b) { return b.checked; });
+  var n = checked.length;
+
+  document.getElementById('redo-count').textContent = n > 0
+    ? n + ' image' + (n > 1 ? 's' : '') + ' selected to redo'
+    : 'Select images to redo';
+  document.getElementById('redo-btn').disabled = n === 0;
+  document.getElementById('select-all-btn').textContent =
+    (n === boxes.length && boxes.length > 0) ? 'Deselect All' : 'Select All';
+
+  boxes.forEach(function(b) {
+    var card = b.closest('.image-card');
+    if (card) card.classList.toggle('card-selected', b.checked);
+  });
+}
+
+function toggleSelectAll() {
+  var boxes = Array.from(document.querySelectorAll('#redo-form input[type="checkbox"]'));
+  var allChecked = boxes.every(function(b) { return b.checked; });
+  boxes.forEach(function(b) { b.checked = !allChecked; });
+  updateRedoBar();
+}
+
 function copyVoteLink() {
   var el = document.getElementById("voteUrl");
+  if (!el) return;
   el.select();
   navigator.clipboard.writeText(el.value).then(function() {
     var c = document.getElementById("copied");

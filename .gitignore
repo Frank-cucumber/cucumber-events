@@ -12,3 +12,4 @@ events.db
 *.ical
 ical_extracted_v2/
 .env
+.aider*

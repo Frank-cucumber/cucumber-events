@@ -1,5 +1,4 @@
 import os
-import threading
 import base64
 from flask import Flask, render_template, request, redirect, url_for, abort, send_from_directory, flash, jsonify, session
 from pathlib import Path
@@ -29,19 +28,19 @@ _ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
 _DATA       = Path("/data") if _ON_RAILWAY else ROOT
 PHOTO_DIR   = _DATA / "photos" / "web"
 
-HF_URL          = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
 _NB_PRO_URL     = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
 _NB_FLASH_URL   = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
 
 _UNIFORM_PEOPLE = [
-    "young Black female healthcare worker, short natural hair, warm smile",
-    "middle-aged South Asian male healthcare worker, friendly expression",
-    "young white female healthcare worker, blonde hair, bright smile",
-    "older Black male healthcare worker, grey beard, confident smile",
-    "young mixed-race female healthcare worker, curly hair, professional pose",
+    "young Black woman, short natural hair, warm smile, confident posture",
+    "middle-aged South Asian man, friendly expression, professional demeanour",
+    "young white woman, blonde hair, bright smile, poised and approachable",
+    "older Black man, grey beard, calm confident expression",
+    "young mixed-race woman, curly hair, natural and professional pose",
 ]
 sys.path.insert(0, str(ROOT))
 from generate_graphic import generate as gen_graphic, _parse_ics
+from generate_batch import EVENTS as _BATCH_EVENTS
 
 app     = Flask(__name__)
 app.secret_key = "cucumber-events-secret"
@@ -57,7 +56,12 @@ def get_db():
     return conn
 
 
+_db_ready = False
+
 def init_db():
+    global _db_ready
+    if _db_ready:
+        return
     with sqlite3.connect(DB_PATH) as conn:
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS events (
@@ -89,8 +93,112 @@ def init_db():
         if "ip_address" not in cols:
             conn.execute("ALTER TABLE votes ADD COLUMN ip_address TEXT")
 
+        _dedupe_variants(conn)
+        indexes = [r[1] for r in conn.execute("PRAGMA index_list(variants)").fetchall()]
+        if "idx_variants_event_num" not in indexes:
+            conn.execute(
+                "CREATE UNIQUE INDEX idx_variants_event_num ON variants(event_id, variant_num)"
+            )
+    _db_ready = True
+
+
+def _dedupe_variants(conn):
+    """Remove duplicate variant_num rows; keep the one with an image, else the newest."""
+    conn.execute("""
+        DELETE FROM variants WHERE id IN (
+            SELECT v.id FROM variants v
+            JOIN (
+                SELECT event_id, variant_num,
+                       COALESCE(MAX(CASE WHEN image_path IS NOT NULL THEN id END), MAX(id)) AS keep_id
+                FROM variants GROUP BY event_id, variant_num
+            ) k ON v.event_id = k.event_id AND v.variant_num = k.variant_num
+            WHERE v.id != k.keep_id
+        )
+    """)
+
 
 # ── AI tagline generation ─────────────────────────────────────────────
+
+_RATE_LIMIT_WAITS = (15, 30, 60, 90, 120)
+
+def _is_rate_limited(exc):
+    code = getattr(exc, "status_code", None)
+    if code == 429:
+        return True
+    msg = str(exc).lower()
+    return "rate_limit" in msg or "error code: 429" in msg
+
+
+def _claude_create(client, **kwargs):
+    """Call Claude with exponential backoff on 429 rate limits."""
+    last_err = None
+    for attempt, wait in enumerate(_RATE_LIMIT_WAITS):
+        try:
+            return client.messages.create(**kwargs)
+        except Exception as e:
+            last_err = e
+            if _is_rate_limited(e) and attempt < len(_RATE_LIMIT_WAITS) - 1:
+                app.logger.warning("Claude rate limited, retry in %ss (%s/%s)",
+                                   wait, attempt + 1, len(_RATE_LIMIT_WAITS))
+                time.sleep(wait)
+            else:
+                raise
+    raise last_err
+
+
+def _norm_event_key(name):
+    return re.sub(r"[^a-z0-9]", "", name.lower().replace("'", ""))
+
+
+def _batch_tagline_lookup():
+    lookup = []
+    for key, data in _BATCH_EVENTS.items():
+        for label in (key.replace("_", " "), data["label"].split("(")[0]):
+            lookup.append((_norm_event_key(label), data["variants"]))
+    return lookup
+
+
+_BATCH_TAGLINE_LOOKUP = _batch_tagline_lookup()
+
+
+def _lookup_batch_taglines(event_name):
+    norm = _norm_event_key(event_name)
+    for key_norm, variants in _BATCH_TAGLINE_LOOKUP:
+        if key_norm in norm or norm in key_norm:
+            return [(h, s) for h, s in variants[:5]]
+    return None
+
+
+def _fallback_taglines(event_name):
+    preset = _lookup_batch_taglines(event_name)
+    if preset:
+        app.logger.info("Using preset taglines for %s", event_name)
+        return preset
+    topic = re.sub(r"\s+", " ", event_name.strip()).upper()
+    return [
+        (f"{topic}.", "FROM ALL OF US AT CUCUMBER RECRUITMENT."),
+        ("THANK YOU.", "WE SEE THE DIFFERENCE YOU MAKE EVERY DAY."),
+        ("YOU MAKE A DIFFERENCE.", "PROUD TO SUPPORT HEALTHCARE PROFESSIONALS."),
+        (f"HAPPY {topic}.", "CUCUMBER RECRUITMENT STANDS WITH YOU."),
+        ("TOGETHER WE CARE.", "CELEBRATING THE PEOPLE WHO SHOW UP."),
+    ]
+
+
+def _fallback_image_prompts(event_name, count=5):
+    import random
+    approaches = random.sample(_VISUAL_APPROACHES, min(count, len(_VISUAL_APPROACHES)))
+    while len(approaches) < count:
+        approaches.append(random.choice(_VISUAL_APPROACHES))
+    people = random.sample(_UNIFORM_PEOPLE, min(count, len(_UNIFORM_PEOPLE)))
+    while len(people) < count:
+        people.append(random.choice(_UNIFORM_PEOPLE))
+    return [
+        f"{person}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
+        f"{event_name} scene. {approach}. "
+        f"Pure white background, studio lighting, photorealistic, sharp focus, 8k."
+        for person, approach in zip(people[:count], approaches[:count])
+    ]
+
 
 def _ai_client():
     # Prefer a proper API key (set this on Railway — never expires)
@@ -104,76 +212,59 @@ def _ai_client():
     return anthropic.Anthropic(auth_token=token)
 
 _VISUAL_APPROACHES = [
-    "close-up of hands, symbolic objects only, no faces, abstract and emotive",
-    "wide environmental shot, person small in frame, sense of space and context",
-    "tight portrait, direct eye contact with camera, shallow depth of field, bokeh background",
-    "overhead flat-lay of relevant objects arranged on a surface, graphic and clean",
-    "candid side-on moment, subject unaware, documentary feel",
-    "silhouette against bright background, dramatic and bold",
-    "group of 2-3 people interacting, human connection, warm and natural",
-    "single striking symbolic object centred in frame, minimalist",
-    "action shot mid-movement, energy and dynamism",
-    "split light, half shadow half warm light, moody and contemplative",
+    "tight portrait, direct eye contact with camera, shallow depth of field, warm bokeh background",
+    "wide shot, person centred in frame, sense of space and purpose",
+    "candid side-on moment, subject unaware, natural documentary feel",
+    "group of 2-3 people interacting, human connection, warm and natural light",
+    "action shot mid-movement, energy and dynamism, motion blur background",
+    "moody split lighting, half shadow half warm light, contemplative expression",
+    "low angle looking up at subject, confident and empowering",
+    "subject looking off-camera, thoughtful and engaged",
 ]
 
-def ai_image_prompts(event_name, count=5, redo_indices=None):
-    """Ask Claude for count complete image prompts for this event.
-    redo_indices: list of 0-based variant positions being redone — forces fresh angles."""
+def ai_image_prompts(event_name, count=5, redo_indices=None, use_presets=False):
+    """Image prompts — templates instantly; Claude only for custom events (one try)."""
+    if use_presets or _lookup_batch_taglines(event_name):
+        return _fallback_image_prompts(event_name, count), True
     import random
-    # Assign a distinct visual approach to each variant slot
     approaches = random.sample(_VISUAL_APPROACHES, min(count, len(_VISUAL_APPROACHES)))
     while len(approaches) < count:
         approaches.append(random.choice(_VISUAL_APPROACHES))
-
     redo_note = ""
     if redo_indices:
         redo_note = (
-            f"\nIMPORTANT: You are regenerating variants {[i+1 for i in redo_indices]}. "
-            f"These MUST look completely different from standard depictions of this event. "
-            f"Be bold and unexpected."
+            f"\nIMPORTANT: Regenerating variants {[i+1 for i in redo_indices]}. "
+            f"Be bold and unexpected.\n"
         )
-
     approach_list = "\n".join(f"  Variant {i+1}: {a}" for i, a in enumerate(approaches))
-
-    client = _ai_client()
-    for attempt in range(3):
-        try:
-            msg = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=900,
-                messages=[{"role": "user", "content": (
-                    f"You are an image prompt writer for Cucumber Recruitment, a UK healthcare staffing agency.\n"
-                    f"Write {count} image generation prompts for the event: {event_name}\n"
-                    f"{redo_note}\n\n"
-                    f"Each variant MUST use the visual approach assigned to it — no swapping:\n"
-                    f"{approach_list}\n\n"
-                    f"Rules:\n"
-                    f"- Each prompt must be a COMPLETE image description built around its assigned approach.\n"
-                    f"- For awareness events (mental health, carers, pride, etc.) use real human scenes or powerful symbols.\n"
-                    f"- For recruitment posts use a person in a dark forest green polo shirt and company lanyard.\n"
-                    f"- Always end every prompt with: pure white background, studio lighting, photorealistic, sharp focus, 8k\n"
-                    f"- Vary gender, age, and ethnicity when people appear.\n"
-                    f"- Keep each prompt under 60 words.\n"
-                    f"Return ONLY a JSON array of {count} strings:\n"
-                    f'["prompt 1", "prompt 2", ...]'
-                )}]
-            )
-            raw = msg.content[0].text.strip()
-            m = re.search(r'\[.*\]', raw, re.DOTALL)
-            if m:
-                raw = m.group(0)
-            prompts = json.loads(raw)
-            return prompts[:count]
-        except (json.JSONDecodeError, IndexError, KeyError) as e:
-            app.logger.warning("AI prompt generation attempt %s failed: %s", attempt+1, e)
-            if attempt == 2:
-                raise
+    try:
+        client = _ai_client()
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=900,
+            messages=[{"role": "user", "content": (
+                f"Write {count} image generation prompts for: {event_name}\n{redo_note}\n"
+                f"Approaches:\n{approach_list}\n\n"
+                f"Every prompt MUST open by describing a specific person dressed in a dark forest green (#1a5c28) polo shirt and a company ID badge on a lanyard. "
+                f"Then describe the scene using the assigned approach.\n"
+                f"End every prompt with: pure white background, studio lighting, photorealistic, sharp focus, 8k\n"
+                f"Return ONLY a JSON array of {count} strings."
+            )}],
+        )
+        raw = msg.content[0].text.strip()
+        m = re.search(r'\[.*\]', raw, re.DOTALL)
+        if m:
+            raw = m.group(0)
+        return json.loads(raw)[:count], False
+    except Exception as e:
+        app.logger.warning("AI image prompts unavailable for %s (%s), using templates", event_name, e)
+        return _fallback_image_prompts(event_name, count), True
 
 
 # ── Nano Banana (Google Imagen 3 / Gemini image generation) ──────────
 
 def _nano_banana_photo(prompt, out_path):
-    """Generate one image via Nano Banana. Tries Pro model first, falls back to Flash."""
+    """Generate one image via Nano Banana (Pro model only)."""
     key = os.environ.get("NANO_BANANA_KEY", "")
     if not key:
         return False
@@ -204,155 +295,54 @@ def _nano_banana_photo(prompt, out_path):
     return False
 
 
-# ── AI Horde (free, crowdsourced SDXL — used when HF credits run out) ──
-
-_HORDE_SUBMIT = "https://stablehorde.net/api/v2/generate/async"
-_HORDE_CHECK  = "https://stablehorde.net/api/v2/generate/check/{}"
-_HORDE_STATUS = "https://stablehorde.net/api/v2/generate/status/{}"
-_HORDE_KEY    = "0000000000"  # anonymous free key
-
-import threading
-_gen_jobs: dict = {}  # event_id -> {"total": N, "done": M, "failed": K, "complete": bool}
-_jobs_lock = threading.Lock()
-
-
-def _horde_one(prompt, out_path):
-    """Submit one image to AI Horde, poll until complete, write to out_path. Returns True on success."""
-    hdr_json = {"apikey": _HORDE_KEY, "Content-Type": "application/json"}
-    hdr      = {"apikey": _HORDE_KEY}
-    try:
-        r = req_lib.post(_HORDE_SUBMIT, headers=hdr_json, json={
-            "prompt": prompt,
-            "params": {"width": 1024, "height": 1024, "steps": 20, "n": 1,
-                       "sampler_name": "k_euler_a"},
-            "models": ["SDXL 1.0"],
-            "r2": False,
-        }, timeout=30)
-        if r.status_code != 202:
-            app.logger.error("Horde submit %s: %s", r.status_code, r.text[:120])
-            return False
-        job_id = r.json()["id"]
-        app.logger.info("Horde job %s submitted", job_id)
-    except Exception as e:
-        app.logger.error("Horde submit error: %s", e)
-        return False
-
-    for _ in range(180):  # poll every 10s, up to 30 min
-        time.sleep(10)
-        try:
-            c = req_lib.get(_HORDE_CHECK.format(job_id), headers=hdr, timeout=15)
-            if c.status_code == 200:
-                d = c.json()
-                app.logger.info("Horde %s: wait=%ss done=%s", job_id, d.get("wait_time"), d.get("done"))
-                if d.get("done"):
-                    break
-        except Exception:
-            pass
-    else:
-        app.logger.error("Horde job %s timed out", job_id)
-        return False
-
-    try:
-        st   = req_lib.get(_HORDE_STATUS.format(job_id), headers=hdr, timeout=30)
-        gens = st.json().get("generations", [])
-        if not gens:
-            app.logger.error("Horde: no generations for job %s", job_id)
-            return False
-        img = gens[0]["img"]
-        if img.startswith("http"):
-            out_path.write_bytes(req_lib.get(img, timeout=30).content)
-        else:
-            out_path.write_bytes(base64.b64decode(img))
-        app.logger.info("Horde job %s saved → %s", job_id, out_path)
-        return True
-    except Exception as e:
-        app.logger.error("Horde result error: %s", e)
-        return False
-
-
-def _horde_background(event_id, variant_dicts, prompts):
-    """Background thread: generate each image via AI Horde and save to DB as it completes."""
-    todo    = [v for v in variant_dicts if not v["image_path"]]
-    out_dir = GFX_DIR / str(event_id)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    PHOTO_DIR.mkdir(parents=True, exist_ok=True)
-    with _jobs_lock:
-        _gen_jobs[event_id] = {"total": len(todo), "done": 0, "failed": 0, "complete": False}
-    all_nums = [v["variant_num"] for v in variant_dicts]
-
-    for v in todo:
-        idx    = all_nums.index(v["variant_num"])
-        prompt = prompts[idx] if idx < len(prompts) else prompts[-1]
-        photo  = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
-        out    = out_dir   / f"v{v['variant_num']}.png"
-
-        if _horde_one(prompt, photo):
-            try:
-                gen_graphic(v["headline"], v["subtext"], "cucumber-recruitment.co.uk",
-                            str(out), photo_path=str(photo))
-                with sqlite3.connect(DB_PATH) as conn:
-                    conn.execute(
-                        "UPDATE variants SET image_path=?, generated_at=? WHERE id=?",
-                        (str(out), datetime.utcnow().isoformat(), v["id"])
-                    )
-                with _jobs_lock:
-                    _gen_jobs[event_id]["done"] += 1
-                app.logger.info("Horde variant %s done (%s/%s)",
-                                v["variant_num"], _gen_jobs[event_id]["done"],
-                                _gen_jobs[event_id]["total"])
-            except Exception as e:
-                app.logger.error("Horde render v%s: %s", v["variant_num"], e)
-                with _jobs_lock:
-                    _gen_jobs[event_id]["failed"] += 1
-        else:
-            with _jobs_lock:
-                _gen_jobs[event_id]["failed"] += 1
-
-    with _jobs_lock:
-        _gen_jobs[event_id]["complete"] = True
-    app.logger.info("Horde background complete for event %s: %s", event_id, _gen_jobs[event_id])
 
 
 def ai_generate_taglines(event_name, event_date=None):
-    client = _ai_client()
+    """Preset copy for known events; one Claude try for custom events."""
+    preset = _lookup_batch_taglines(event_name)
+    if preset:
+        return preset, False
     date_hint = f" (date: {event_date})" if event_date else ""
-
-    for attempt in range(3):
-        try:
-            msg = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=600,
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        f"You are a copywriter for Cucumber Recruitment, a UK healthcare staffing agency.\n"
-                        f"Generate 5 unique social media graphic taglines for the event: {event_name}{date_hint}\n\n"
-                        f"Rules:\n"
-                        f"- HEADLINE: 2–5 words, ALL CAPS, punchy and direct\n"
-                        f"- SUBTEXT: 5–8 words, ALL CAPS, warm and supportive\n"
-                        f"- Each of the 5 must feel distinct — vary the angle\n"
-                        f"- Mention 'CUCUMBER RECRUITMENT' or 'CUCUMBER' in 1–2 subtexts\n"
-                        f"- No hashtags, no emojis, no punctuation beyond full stops and commas\n\n"
-                        f"Return ONLY a JSON array, nothing else:\n"
-                        f'[{{"headline": "...", "subtext": "..."}}, ...]'
-                    )
-                }]
-            )
-            raw = msg.content[0].text.strip()
-            match = re.search(r'\[.*\]', raw, re.DOTALL)
-            if match:
-                raw = match.group(0)
-            pairs = json.loads(raw)
-            return [(p["headline"].upper(), p["subtext"].upper()) for p in pairs[:5]]
-        except (json.JSONDecodeError, IndexError, KeyError) as e:
-            app.logger.warning("AI tagline generation attempt %s failed: %s", attempt+1, e)
-            if attempt == 2:
-                raise
+    prompt = (
+        f"You are a copywriter for Cucumber Recruitment, a UK healthcare staffing agency.\n"
+        f"Generate 5 unique social media graphic taglines for the event: {event_name}{date_hint}\n\n"
+        f"Rules:\n"
+        f"- HEADLINE: 2–5 words, ALL CAPS, punchy and direct\n"
+        f"- SUBTEXT: 5–8 words, ALL CAPS, warm and supportive\n"
+        f"- Each of the 5 must feel distinct — vary the angle\n"
+        f"- Mention 'CUCUMBER RECRUITMENT' or 'CUCUMBER' in 1–2 subtexts\n"
+        f"- No hashtags, no emojis, no punctuation beyond full stops and commas\n\n"
+        f"Return ONLY a JSON array, nothing else:\n"
+        f'[{{"headline": "...", "subtext": "..."}}, ...]'
+    )
+    try:
+        client = _ai_client()
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = msg.content[0].text.strip()
+        match = re.search(r'\[.*\]', raw, re.DOTALL)
+        if match:
+            raw = match.group(0)
+        pairs = json.loads(raw)
+        return [(p["headline"].upper(), p["subtext"].upper()) for p in pairs[:5]], False
+    except Exception as e:
+        app.logger.warning("AI taglines unavailable for %s (%s), using presets", event_name, e)
+        return _fallback_taglines(event_name), True
 
 
 # ── Calendar ─────────────────────────────────────────────────────────
 
+_calendar_cache = {"at": 0.0, "data": ()}
+_CALENDAR_TTL = 300  # seconds
+
+
 def upcoming_calendar(limit=20):
+    now = time.time()
+    if now - _calendar_cache["at"] < _CALENDAR_TTL and _calendar_cache["data"]:
+        return list(_calendar_cache["data"])[:limit]
     try:
         today = date.today()
         raw   = [(d, s, de) for d, s, de in _parse_ics() if d >= today][:limit]
@@ -361,6 +351,8 @@ def upcoming_calendar(limit=20):
             s = re.sub(r"[^\x20-\x7E]", "", s).strip()
             s = re.sub(r"(?i)^post:\s*", "", s).strip()
             out.append((d, s, de))
+        _calendar_cache["at"] = now
+        _calendar_cache["data"] = tuple(out)
         return out
     except Exception:
         return []
@@ -475,17 +467,14 @@ def event_detail(event_id):
     db.close()
     all_generated  = bool(variants) and all(v["image_path"] for v in variants)
     has_any_images = any(v["image_path"] for v in variants)
-    job = _gen_jobs.get(event_id)
-    generating = bool(job and not job.get("complete"))
     return render_template("event.html",
         event=event, variants=variants, all_generated=all_generated,
-        has_any_images=has_any_images, generating=generating,
-        gen_progress=job)
+        has_any_images=has_any_images, generating=False,
+        gen_progress=None)
 
 
 @app.route("/events/<int:event_id>/gen-status")
 def gen_status(event_id):
-    job = _gen_jobs.get(event_id, {})
     db  = get_db()
     row = db.execute(
         "SELECT COUNT(*) AS total, SUM(CASE WHEN image_path IS NOT NULL THEN 1 ELSE 0 END) AS done "
@@ -493,10 +482,10 @@ def gen_status(event_id):
     ).fetchone()
     db.close()
     return jsonify({
-        "generating": bool(job and not job.get("complete")),
+        "generating": False,
         "total":  row["total"] or 0,
         "done":   row["done"]  or 0,
-        "failed": job.get("failed", 0),
+        "failed": 0,
     })
 
 
@@ -508,36 +497,33 @@ def generate_images(event_id):
         abort(404)
 
     redo_ids = request.form.getlist("redo", type=int)
-    app.logger.info("generate_images event=%s redo_ids=%s", event_id, redo_ids)
-    variants = db.execute(
-        "SELECT * FROM variants WHERE event_id=? ORDER BY variant_num", (event_id,)
-    ).fetchall()
+    taglines_fallback = False
 
-    # First time: generate taglines via Claude
-    if not variants:
-        try:
-            pairs = ai_generate_taglines(event["name"], event["event_date"])
-        except Exception as e:
-            flash(f"Could not generate taglines: {e}", "error")
-            db.close()
-            return redirect(url_for("event_detail", event_id=event_id))
-        for i, (h, s) in enumerate(pairs, 1):
+    db.execute("BEGIN IMMEDIATE")
+    variant_count = db.execute(
+        "SELECT COUNT(*) FROM variants WHERE event_id=?", (event_id,)
+    ).fetchone()[0]
+    if variant_count == 0:
+        pairs, taglines_fallback = ai_generate_taglines(event["name"], event["event_date"])
+        if taglines_fallback:
+            flash("Using preset taglines. Images will still generate.", "info")
+        for i, (h, s) in enumerate(pairs[:5], 1):
             db.execute(
                 "INSERT INTO variants (event_id, variant_num, headline, subtext) VALUES (?,?,?,?)",
                 (event_id, i, h, s)
             )
-        db.commit()
-        variants = db.execute(
-            "SELECT * FROM variants WHERE event_id=? ORDER BY variant_num", (event_id,)
-        ).fetchall()
+    db.commit()
 
-    # Redo: delete files and clear DB for selected variants
+    variants = db.execute(
+        "SELECT * FROM variants WHERE event_id=? ORDER BY variant_num", (event_id,)
+    ).fetchall()
+
     if redo_ids:
         for v in variants:
             if v["id"] in redo_ids:
                 photo = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
                 photo.unlink(missing_ok=True)
-                Path(str(photo) + ".rmbg.png").unlink(missing_ok=True)  # bg-removal cache
+                Path(str(photo) + ".rmbg.png").unlink(missing_ok=True)
                 (GFX_DIR / str(event_id) / f"v{v['variant_num']}.png").unlink(missing_ok=True)
                 db.execute("UPDATE variants SET image_path=NULL WHERE id=?", (v["id"],))
         db.commit()
@@ -546,173 +532,50 @@ def generate_images(event_id):
         ).fetchall()
         flash(f"Regenerated {len(redo_ids)} image variants", "success")
 
-    # Generate image prompts via Claude
     redo_indices = [i for i, v in enumerate(variants) if v["id"] in redo_ids] if redo_ids else None
-    try:
-        prompts = ai_image_prompts(event["name"], len(variants), redo_indices=redo_indices)
-    except Exception as e:
-        app.logger.error("Prompts failed: %s", e)
-        flash(f"Could not generate image prompts: {e}", "error")
-        db.close()
-        return redirect(url_for("event_detail", event_id=event_id))
+    used_presets = bool(_lookup_batch_taglines(event["name"])) or taglines_fallback
+    prompts, _ = ai_image_prompts(
+        event["name"], len(variants), redo_indices=redo_indices, use_presets=used_presets)
 
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     out_dir = GFX_DIR / str(event_id)
     out_dir.mkdir(parents=True, exist_ok=True)
-    tok = os.environ.get("HF_TOKEN", "")
     now = datetime.utcnow().isoformat()
 
-    # ── Try HuggingFace FLUX (fast, concurrent) ───────────────────
-    hf_credits_ok = True
-
-    def _hf_photo(args):
+    def _process(args):
         i, v = args
         if v["image_path"]:
-            return "kept"
+            return (v["id"], v["image_path"], False)
         photo = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
-        if photo.exists():
-            return "cached"
+        out   = out_dir   / f"v{v['variant_num']}.png"
         prompt = prompts[i] if i < len(prompts) else prompts[-1]
+        if not photo.exists() and not _nano_banana_photo(prompt, photo):
+            return (v["id"], None, False)
         try:
-            r = req_lib.post(HF_URL,
-                headers={"Authorization": f"Bearer {tok}"},
-                json={"inputs": prompt, "parameters": {
-                    "width": 1024, "height": 1024, "num_inference_steps": 8}},
-                timeout=180)
-            if r.status_code == 200:
-                photo.write_bytes(r.content)
-                return "ok"
-            if r.status_code == 402:
-                return "credits"
-            app.logger.error("HF v%s: %s", v["variant_num"], r.status_code)
-            return "error"
+            gen_graphic(v["headline"], v["subtext"], "cucumber-recruitment.co.uk",
+                        str(out), photo_path=str(photo))
+            return (v["id"], str(out), True)
         except Exception as e:
-            app.logger.error("HF v%s error: %s", v["variant_num"], e)
-            return "error"
+            app.logger.error("Render v%s: %s", v["variant_num"], e)
+            return (v["id"], None, False)
 
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        hf_statuses = list(pool.map(_hf_photo, enumerate(variants)))
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        results = list(pool.map(_process, enumerate(variants)))
 
-    hf_credits_ok = "credits" not in hf_statuses
+    ok = 0
+    for vid, path, is_new in results:
+        if path:
+            db.execute("UPDATE variants SET image_path=?, generated_at=? WHERE id=?",
+                       (path, now, vid))
+            if is_new:
+                ok += 1
+    db.commit()
+    db.close()
 
-    if hf_credits_ok:
-        # Render graphics for all variants that have a photo
-        def _render(args):
-            i, v = args
-            if v["image_path"]:
-                return (v["id"], v["image_path"], False)
-            photo = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
-            if not photo.exists():
-                return (v["id"], None, False)
-            out = out_dir / f"v{v['variant_num']}.png"
-            try:
-                gen_graphic(v["headline"], v["subtext"], "cucumber-recruitment.co.uk",
-                            str(out), photo_path=str(photo))
-                return (v["id"], str(out), True)
-            except Exception as e:
-                app.logger.error("Render v%s: %s", v["variant_num"], e)
-                return (v["id"], None, False)
-
-        with ThreadPoolExecutor(max_workers=5) as pool:
-            results = list(pool.map(_render, enumerate(variants)))
-
-        ok, fail = 0, []
-        for vid, path, is_new in results:
-            if path:
-                db.execute("UPDATE variants SET image_path=?, generated_at=? WHERE id=?",
-                           (path, now, vid))
-                if is_new:
-                    ok += 1
-            else:
-                fail.append(f"variant {vid}")
-
-        db.commit()
-        db.close()
-        if fail:
-            flash(f"Generated {ok} image(s). Some failed.", "error")
-        else:
-            flash(f"Generated {ok} image(s) successfully.", "success")
-
-    else:
-        # ── HF credits exhausted → try Nano Banana (fast), then AI Horde ──
-        db.close()
-
-        def _nb_photo(args):
-            i, v = args
-            if v["image_path"]:
-                return (v, "kept")
-            photo = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
-            if photo.exists():
-                return (v, "cached")
-            prompt = prompts[i] if i < len(prompts) else prompts[-1]
-            return (v, "ok" if _nano_banana_photo(prompt, photo) else "failed")
-
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            nb_results = list(pool.map(_nb_photo, enumerate(variants)))
-
-        new_generated = [s for _, s in nb_results if s not in ("kept", "cached")]
-        nb_any_ok     = any(s == "ok"     for s in new_generated)
-        nb_any_failed = any(s == "failed" for s in new_generated)
-        nb_has_new    = bool(new_generated)
-
-        # Render if: Nano Banana generated at least one new image, or everything was already kept
-        if (not nb_has_new) or nb_any_ok:
-            # Render graphics for Nano Banana photos
-            now = datetime.utcnow().isoformat()
-            out_dir.mkdir(parents=True, exist_ok=True)
-
-            def _render_nb(args):
-                i, (v, status) = args
-                if status == "kept":
-                    return (v["id"], v["image_path"], False)
-                photo = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
-                if not photo.exists():
-                    return (v["id"], None, False)
-                out = out_dir / f"v{v['variant_num']}.png"
-                try:
-                    gen_graphic(v["headline"], v["subtext"], "cucumber-recruitment.co.uk",
-                                str(out), photo_path=str(photo))
-                    return (v["id"], str(out), True)
-                except Exception as e:
-                    app.logger.error("Render v%s: %s", v["variant_num"], e)
-                    return (v["id"], None, False)
-
-            db2 = get_db()
-            with ThreadPoolExecutor(max_workers=5) as pool:
-                render_results = list(pool.map(_render_nb, enumerate(nb_results)))
-            ok2, fail2 = 0, []
-            for vid, path, is_new in render_results:
-                if path:
-                    db2.execute("UPDATE variants SET image_path=?, generated_at=? WHERE id=?",
-                                (path, now, vid))
-                    if is_new:
-                        ok2 += 1
-                else:
-                    fail2.append(f"v{vid}")
-            db2.commit()
-            db2.close()
-            if fail2:
-                flash(f"Generated {ok2} image(s) via Nano Banana. Some failed.", "error")
-            else:
-                flash(f"Generated {ok2} image(s) via Nano Banana.", "success")
-
-        else:
-            # Last resort: AI Horde background
-            already_running = (event_id in _gen_jobs and not _gen_jobs[event_id].get("complete"))
-            if not already_running:
-                fresh_db   = get_db()
-                fresh_vars = [dict(v) for v in fresh_db.execute(
-                    "SELECT * FROM variants WHERE event_id=? ORDER BY variant_num", (event_id,)
-                ).fetchall()]
-                fresh_db.close()
-                threading.Thread(
-                    target=_horde_background,
-                    args=(event_id, fresh_vars, prompts),
-                    daemon=True
-                ).start()
-                flash("Switching to AI Horde (free, slower). Images appear automatically as each one completes.", "info")
-            else:
-                flash("Images are still generating in the background — please wait.", "info")
+    if ok:
+        flash(f"Generated {ok} image(s) via Nano Banana.", "success")
+    elif not redo_ids:
+        flash("Image generation failed — check your NANO_BANANA_KEY.", "error")
 
     return redirect(url_for("event_detail", event_id=event_id))
 

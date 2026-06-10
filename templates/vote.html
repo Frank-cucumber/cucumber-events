@@ -4,11 +4,21 @@
 {% block content %}
 <section class="vote-page">
   <h2>Vote: {{ event['name'] }}</h2>
+  {% if already_voted %}
+  <div class="alert alert-info">
+    You voted for <strong>Option {{ current_vote_num }}</strong>.
+    <form method="post" action="{{ url_for('unvote', event_id=event['id']) }}" style="display:inline;margin-left:12px;">
+      <button class="btn-sm" type="submit">Change vote</button>
+    </form>
+    <a href="{{ url_for('results', event_id=event['id']) }}" style="margin-left:12px;">See results →</a>
+  </div>
+  {% else %}
   <p class="vote-intro">Click the image you think works best, enter your name, then submit.</p>
+  {% endif %}
 
   {% if not variants %}
   <div class="alert">Images haven't been generated yet. <a href="{{ url_for('event_detail', event_id=event['id']) }}">Go back and generate them first.</a></div>
-  {% else %}
+  {% elif not already_voted %}
   <form method="post" id="voteForm">
     <div class="vote-grid">
       {% for v in variants %}

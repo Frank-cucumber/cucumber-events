@@ -183,8 +183,9 @@ def _remove_bg(photo_path):
         return Image.open(cache).convert("RGB")
 
     on_railway = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+    use_rembg = os.environ.get("USE_REMBG", "").lower() in ("1", "true", "yes")
 
-    if not on_railway:
+    if not on_railway and use_rembg:
         try:
             import io
             from rembg import remove as rembg_remove
