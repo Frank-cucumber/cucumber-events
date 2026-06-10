@@ -113,14 +113,7 @@ def draw_banner(draw):
     draw.rectangle([0, 0, W, BANNER_H], fill=GREEN)
 
     if _LOGO_PATH.exists():
-        logo = Image.open(_LOGO_PATH).convert("RGB")
-        import numpy as np
-        arr = np.array(logo)
-        # Replace dark green pixels (banner background bleed) with banner green
-        r, g, b = arr[:,:,0], arr[:,:,1], arr[:,:,2]
-        is_green = (g > r + 20) & (g > b + 20) & (g < 180)
-        arr[is_green] = [GREEN[0], GREEN[1], GREEN[2]]
-        logo = Image.fromarray(arr)
+        logo = Image.open(_LOGO_PATH).convert("RGBA")
         # Scale to fit banner
         target_h = BANNER_H - 24
         ratio = target_h / logo.height
@@ -128,7 +121,8 @@ def draw_banner(draw):
         logo = logo.resize((target_w, target_h), Image.LANCZOS)
         lx = (W - target_w) // 2
         ly = (BANNER_H - target_h) // 2
-        draw._image.paste(logo, (lx, ly))
+        # Paste the logo with transparency
+        draw._image.paste(logo, (lx, ly), logo)
     else:
         # Fallback if logo file missing
         bw, bh = 310, 92
