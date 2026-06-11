@@ -103,16 +103,44 @@ def init_db():
     _db_ready = True
 
 
+_MONTH_MAP = {
+    "jan":1,"feb":2,"mar":3,"apr":4,"may":5,"jun":6,
+    "jul":7,"aug":8,"sep":9,"oct":10,"nov":11,"dec":12,
+}
+
+def _parse_batch_date(label):
+    m = re.search(r'\(([^)]+)\)', label)
+    if not m:
+        return None
+    s = m.group(1)
+    month_m = re.search(r'([A-Za-z]{3,})', s)
+    if not month_m:
+        return None
+    mon = _MONTH_MAP.get(month_m.group(1)[:3].lower())
+    if not mon:
+        return None
+    day_m = re.match(r'(\d+)', s.strip())
+    day = int(day_m.group(1)) if day_m else 1
+    yr = date.today().year
+    try:
+        d = date(yr, mon, day)
+        if d < date.today():
+            d = date(yr + 1, mon, day)
+        return d.isoformat()
+    except Exception:
+        return None
+
+
 def _seed_batch_events(conn):
     """Populate events + taglines from generate_batch.py if the DB is empty."""
     if conn.execute("SELECT COUNT(*) FROM events").fetchone()[0] > 0:
         return
-    import re as _re
     for key, data in _BATCH_EVENTS.items():
-        # Extract clean name: strip the date part in parentheses
-        name = _re.sub(r"\s*\(.*?\)\s*$", "", data["label"]).rstrip("—– ").strip()
+        name = re.sub(r"\s*\(.*?\)\s*$", "", data["label"]).rstrip("—– ").strip()
+        event_date = _parse_batch_date(data["label"])
         cur = conn.execute(
-            "INSERT INTO events (name, source) VALUES (?, 'batch')", (name,)
+            "INSERT INTO events (name, event_date, source) VALUES (?, ?, 'batch')",
+            (name, event_date)
         )
         eid = cur.lastrowid
         for i, (h, s) in enumerate(data["variants"][:5], 1):
@@ -443,11 +471,8 @@ def index():
     cal_raw = upcoming_calendar()
     db.close()
 
-    # Keys of already-created events so we don't double-list them
-    created_keys = set()
-    for e in events:
-        if e["event_date"]:
-            created_keys.add((e["event_date"], e["name"].lower().strip()))
+    # Names of already-created events — suppress matching calendar entries
+    created_names = {e["name"].lower().strip() for e in events}
 
     # Build merged timeline
     from datetime import date as _date
@@ -462,7 +487,7 @@ def index():
         merged.append({"kind": "event", "date": dt, "row": dict(e)})
 
     for ev_date, name, desc in cal_raw:
-        if (ev_date.isoformat(), name.lower().strip()) not in created_keys:
+        if name.lower().strip() not in created_names:
             merged.append({"kind": "calendar", "date": ev_date, "name": name,
                            "date_iso": ev_date.isoformat()})
 
