@@ -25,7 +25,7 @@ if _env_file.exists():
 
 # On Railway use /data (persistent volume); locally use project dir
 _ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
-_DATA       = Path("/data") if _ON_RAILWAY else ROOT
+_DATA       = Path("/tmp") if _ON_RAILWAY else ROOT
 PHOTO_DIR   = _DATA / "photos" / "web"
 
 _NB_PRO_URL     = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
