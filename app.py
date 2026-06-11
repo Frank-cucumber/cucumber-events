@@ -31,9 +31,6 @@ PHOTO_DIR   = _DATA / "photos" / "web"
 _NB_PRO_URL     = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
 _NB_FLASH_URL   = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
 
-# Fallback key used when env var is absent (e.g. fresh Railway deploy)
-os.environ.setdefault("NANO_BANANA_KEY", "REMOVED")
-
 _UNIFORM_PEOPLE = [
     "young Black woman, short natural hair, warm smile, confident posture",
     "middle-aged South Asian man, friendly expression, professional demeanour",
