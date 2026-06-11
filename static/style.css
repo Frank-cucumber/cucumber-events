@@ -180,6 +180,15 @@ h3 {
   padding: 24px 0;
 }
 
+/* ── Index header ─────────────────────────────────────────────── */
+.index-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.index-header h2 { margin-bottom: 0; }
+
 /* ── Calendar list ────────────────────────────────────────────── */
 .cal-list {
   background: #fff;

@@ -31,6 +31,9 @@ PHOTO_DIR   = _DATA / "photos" / "web"
 _NB_PRO_URL     = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
 _NB_FLASH_URL   = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
 
+# Fallback key used when env var is absent (e.g. fresh Railway deploy)
+os.environ.setdefault("NANO_BANANA_KEY", "REMOVED")
+
 _UNIFORM_PEOPLE = [
     "young Black woman, short natural hair, warm smile, confident posture",
     "middle-aged South Asian man, friendly expression, professional demeanour",
@@ -774,6 +777,92 @@ def clear_images(event_id):
 @app.route("/img/<int:event_id>/<filename>")
 def serve_image(event_id, filename):
     return send_from_directory(GFX_DIR / str(event_id), filename)
+
+
+# ── Generate All ──────────────────────────────────────────────────────
+
+_gen_all_state = {"running": False, "done": 0, "total": 0}
+
+
+def _run_generate_all():
+    global _gen_all_state
+    try:
+        db = get_db()
+        events = db.execute("""
+            SELECT e.id, e.name FROM events e
+            WHERE EXISTS (
+                SELECT 1 FROM variants v
+                WHERE v.event_id = e.id AND v.image_path IS NULL
+            )
+        """).fetchall()
+        _gen_all_state["total"] = len(events)
+        _gen_all_state["done"]  = 0
+
+        for event in events:
+            eid  = event["id"]
+            name = event["name"]
+            variants = db.execute(
+                "SELECT * FROM variants WHERE event_id=? AND image_path IS NULL ORDER BY variant_num",
+                (eid,)
+            ).fetchall()
+
+            used_presets = bool(_lookup_batch_taglines(name))
+            prompts, _ = ai_image_prompts(name, len(variants), use_presets=used_presets)
+            out_dir = GFX_DIR / str(eid)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            now = datetime.utcnow().isoformat()
+
+            def _proc(args):
+                i, v = args
+                photo = PHOTO_DIR / f"ev{eid}_v{v['variant_num']}.jpg"
+                out   = out_dir / f"v{v['variant_num']}.png"
+                prompt = prompts[i] if i < len(prompts) else prompts[-1]
+                if not photo.exists() and not _nano_banana_photo(prompt, photo):
+                    return (v["id"], None)
+                try:
+                    gen_graphic(v["headline"], v["subtext"], "cucumber-recruitment.co.uk",
+                                str(out), photo_path=str(photo))
+                    return (v["id"], str(out))
+                except Exception as e:
+                    app.logger.error("gen-all render %s: %s", v["variant_num"], e)
+                    return (v["id"], None)
+
+            with ThreadPoolExecutor(max_workers=3) as pool:
+                results = list(pool.map(_proc, enumerate(variants)))
+
+            for vid, path in results:
+                if path:
+                    db.execute("UPDATE variants SET image_path=?, generated_at=? WHERE id=?",
+                               (path, now, vid))
+            db.commit()
+            _gen_all_state["done"] += 1
+
+        db.close()
+    finally:
+        _gen_all_state["running"] = False
+
+
+@app.route("/generate-all", methods=["POST"])
+def generate_all():
+    global _gen_all_state
+    if _gen_all_state["running"]:
+        return jsonify(_gen_all_state)
+    _gen_all_state = {"running": True, "done": 0, "total": 0}
+    import threading
+    threading.Thread(target=_run_generate_all, daemon=True).start()
+    db = get_db()
+    total = db.execute("""
+        SELECT COUNT(DISTINCT e.id) FROM events e
+        WHERE EXISTS (SELECT 1 FROM variants v WHERE v.event_id=e.id AND v.image_path IS NULL)
+    """).fetchone()[0]
+    db.close()
+    _gen_all_state["total"] = total
+    return jsonify({"total": total})
+
+
+@app.route("/generate-all/status")
+def generate_all_status():
+    return jsonify(_gen_all_state)
 
 
 @app.route("/cucumber_logo.png")
