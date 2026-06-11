@@ -28,13 +28,40 @@ UNIFORM_PEOPLE = [
     "young mixed-race woman, curly hair, natural and professional pose",
 ]
 
-VISUAL_APPROACHES = [
-    "tight portrait, direct eye contact with camera, shallow depth of field, warm bokeh background",
-    "wide shot, person centred in frame, sense of space and purpose",
-    "candid side-on moment, subject unaware, natural documentary feel",
-    "action shot mid-movement, energy and dynamism, motion blur background",
-    "moody split lighting, half shadow half warm light, contemplative expression",
+PERSON_APPROACHES = [
+    "tight portrait, direct eye contact, warm smile, natural indoor setting, soft bokeh, shallow depth of field",
+    "confident mid-shot in a professional environment, warm natural window light, depth of field",
+    "candid moment, thoughtful expression, blurred warm workplace background, natural light",
+    "low angle looking up, empowering, outdoor environment with natural sky",
 ]
+
+EVENT_SCENES = {
+    "anti-bullying":       ["hands of different skin tones joined together in solidarity, warm close-up, natural light", "chain of colourful paper people standing together, overhead flat-lay on white surface", "one hand reaching out to help another, symbolic and warm, shallow depth of field"],
+    "men's health":        ["running shoes, water bottle and apple arranged on a clean white surface, overhead flat-lay", "a green plant growing strongly in sunlight on a windowsill, symbolic of health and growth", "man's hands holding a small thriving plant, nurturing, warm natural light"],
+    "pride":               ["rainbow colours blending in a joyful abstract wave, vibrant, clean white background", "colourful pride flags in soft bokeh, warm celebration light, no people", "hands of different skin tones forming a heart with rainbow wristbands, close-up"],
+    "carers":              ["two mugs of tea side by side on a wooden table, warm natural light, comforting", "a single sunflower in a vase on a sunlit windowsill, symbolic of care and warmth", "one pair of hands gently holding another older pair of hands, close and tender"],
+    "world aids day":      ["a single red ribbon centred on a clean white surface, bold and symbolic, studio lighting", "red candles glowing around a red ribbon, warm memorial atmosphere, golden light", "collection of red ribbons arranged artistically, meaningful, clean background"],
+    "learning disability": ["colourful jigsaw puzzle pieces completing a picture together, overhead flat-lay, bright colours", "diverse hands of different sizes coming together, inclusive and warm", "bright sunflowers of different heights in a row, symbolic of diversity, golden light"],
+    "mental health":       ["hands gently cradling a small green plant, nurturing, soft natural light", "calm still lake at golden hour, peaceful and restorative, no people", "a single lit candle in a dark room, warm hopeful glow, darkness around it"],
+    "diabetes":            ["bold blue circle on a clean white background, centred and powerful, studio lighting", "fresh colourful fruits and vegetables arranged in a circle, health and vitality, overhead shot", "a glucose monitor beside a green apple on a clean white surface, minimal and clear"],
+    "national inclusion":  ["hands of many different skin tones stacked on top of each other, unity, close-up, warm light", "a colourful mosaic heart made of small tiles, diversity symbolism, overhead flat-lay", "open door leading to a bright welcoming space, opportunity and inclusion, wide angle"],
+    "inclusion":           ["hands of many different skin tones stacked on top of each other, unity, close-up, warm light", "a colourful mosaic heart made of small tiles, diversity symbolism, overhead flat-lay", "open door leading to a bright welcoming space, opportunity and inclusion, wide angle"],
+    "saturday spotlight":  ["a single dramatic spotlight beam on a dark stage floor, bold, no people", "a microphone on a clean stage, bold and simple, warm spotlight", "an open door leading to warm bright light, opportunity and possibility, wide angle"],
+    "open day":            ["an open door leading to a bright welcoming modern office, warm natural light, wide angle", "a welcome sign on a clean desk with fresh flowers, professional and inviting", "keys on a clean desk beside a thriving green plant, new beginnings, warm light"],
+    "volunteer":           ["many hands arranging flowers or planting together, community spirit, warm natural light", "a neatly tied bunch of wildflowers on a wooden table, gift of care, warm light", "open hands offering a small glowing heart, symbolic of giving, warm light"],
+    "recruitment":         ["a clean modern desk with a laptop and coffee, professional workspace, natural light", "a handshake close-up, professional and warm, shallow depth of field", "upward staircase leading to bright light, career growth symbolism, wide angle"],
+}
+
+def get_scene_prompts(event_name):
+    key = event_name.lower()
+    for k, scenes in EVENT_SCENES.items():
+        if k in key:
+            return list(scenes)
+    return [
+        f"symbolic objects representing {event_name}, styled flat-lay on a clean white surface, overhead shot, rich colours",
+        f"atmospheric scene capturing the spirit of {event_name}, golden hour light, no people, photojournalistic",
+        f"hands in a meaningful gesture related to {event_name}, warm intimate lighting, shallow depth of field",
+    ]
 
 
 def nb_photo(prompt, out_path):
@@ -59,23 +86,30 @@ def nb_photo(prompt, out_path):
     return False
 
 
-def make_prompt(event_name, variant_num):
-    idx = (variant_num - 1) % len(UNIFORM_PEOPLE)
-    person   = UNIFORM_PEOPLE[idx]
-    approach = VISUAL_APPROACHES[idx]
-    return (
-        f"{person}, dressed in a dark forest green (#1a5c28) polo shirt "
-        f"with a company ID badge on a lanyard. "
-        f"{event_name} scene. {approach}. "
-        f"Pure white background, studio lighting, photorealistic, sharp focus, 8k."
-    )
+def make_prompts(event_name):
+    """5 prompts: 2 person-in-uniform + 3 contextual/symbolic, shuffled."""
+    people = random.sample(UNIFORM_PEOPLE, 2)
+    p_app  = random.sample(PERSON_APPROACHES, 2)
+    scenes = get_scene_prompts(event_name)
+    random.shuffle(scenes)
+
+    prompts = []
+    for person, approach in zip(people, p_app):
+        prompts.append(
+            f"{person}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
+            f"{event_name} theme. {approach}. Photorealistic, sharp focus, 8k."
+        )
+    for scene in scenes[:3]:
+        prompts.append(f"Photorealistic image. {scene}. Sharp focus, 8k.")
+
+    random.shuffle(prompts)
+    return prompts
 
 
-def process_variant(event_id, event_name, v):
+def process_variant(event_id, event_name, v, prompt):
     num   = v["variant_num"]
     photo = PHOTO_DIR / f"ev{event_id}_v{num}.jpg"
     out   = GFX_DIR / str(event_id) / f"v{num}.png"
-    prompt = make_prompt(event_name, num)
 
     print(f"  V{num}: {v['headline'][:40]}")
     if not nb_photo(prompt, photo):
@@ -122,9 +156,10 @@ for event in events:
 
     (GFX_DIR / str(eid)).mkdir(parents=True, exist_ok=True)
     variants = [dict(v) for v in variants]
+    prompts  = make_prompts(name)
 
     with ThreadPoolExecutor(max_workers=3) as pool:
-        results = list(pool.map(lambda v: process_variant(eid, name, v), variants))
+        results = list(pool.map(lambda args: process_variant(eid, name, args[1], prompts[args[0]]), enumerate(variants)))
 
     now = datetime.utcnow().isoformat()
     ok = 0

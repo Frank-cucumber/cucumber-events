@@ -286,13 +286,35 @@ h3 {
   border-radius: 8px;
   padding: 20px 24px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
   margin-bottom: 28px;
-  flex-wrap: wrap;
 }
 .generate-box p { font-size: 0.9rem; color: #444; }
+
+/* ── Vision box ───────────────────────────────────────────────── */
+.vision-box {
+  background: #f5faf6;
+  border: 1px solid #b8d9be;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vision-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #1a5c28;
+}
+.vision-hint {
+  font-size: 0.78rem;
+  color: #777;
+  margin: 0;
+}
 
 /* ── Share row ────────────────────────────────────────────────── */
 .share-row {
@@ -466,16 +488,43 @@ h3 {
   box-shadow: 0 0 0 2px rgba(26,92,40,0.2);
 }
 
+/* ── Custom prompt input ──────────────────────────────────────── */
+.prompt-input {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: #333;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.prompt-input:focus {
+  outline: none;
+  border-color: #1a5c28;
+  box-shadow: 0 0 0 2px rgba(26,92,40,0.15);
+}
+.prompt-input-redo {
+  margin-top: 10px;
+}
+
 /* ── Redo bar ─────────────────────────────────────────────────── */
 .redo-bar {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 20px;
   padding: 14px 20px;
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
+}
+.redo-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -816,6 +865,5 @@ h3 {
   }
 
   .event-header-actions { width: 100%; }
-  .generate-box { flex-direction: column; align-items: flex-start; }
-  .redo-bar { flex-direction: column; align-items: stretch; }
+  .redo-bar-actions { flex-direction: column; align-items: stretch; }
 }

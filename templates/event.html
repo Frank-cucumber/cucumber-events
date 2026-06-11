@@ -30,12 +30,21 @@
     </div>
   </div>
 
+  {# ── Vision box — always visible ────────────────────────────── #}
+  <div class="vision-box">
+    <label class="vision-label" for="vision-input">What do you have in mind?</label>
+    <textarea id="vision-input" class="prompt-input"
+              placeholder="Describe the scene you're picturing — e.g. 'nurses celebrating in a hospital corridor', 'diverse team in an office', 'hands holding together outdoors'. Leave blank to let AI decide."></textarea>
+    <p class="vision-hint">This guides the image generation. Fill it in before you generate or redo.</p>
+  </div>
+
   {% if not variants %}
   <div class="generate-box">
     <p>Click to generate 5 images — AI will write the taglines automatically.</p>
-    <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}">
+    <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}" id="gen-form">
+      <input type="hidden" name="custom_prompt" id="gen-prompt-hidden">
       <button class="btn" type="submit" id="generate-btn"
-              onclick="this.disabled=true; this.form.submit();">Generate Images</button>
+              onclick="syncVisionAndSubmit(this, 'gen-form')">Generate Images</button>
     </form>
   </div>
   {% endif %}
@@ -58,9 +67,10 @@
   {% elif not all_generated %}
   <div class="generate-box">
     <p>Some images are missing. Click to generate them.</p>
-    <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}">
+    <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}" id="missing-form">
+      <input type="hidden" name="custom_prompt" id="missing-prompt-hidden">
       <button class="btn" type="submit"
-              onclick="this.disabled=true; this.form.submit();">Generate Missing</button>
+              onclick="syncVisionAndSubmit(this, 'missing-form')">Generate Missing</button>
     </form>
   </div>
   {% endif %}
@@ -76,6 +86,7 @@
   {% endif %}
 
   <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}" id="redo-form">
+    <input type="hidden" name="custom_prompt" id="redo-prompt-hidden">
     <div class="image-grid">
       {% for v in variants %}
       <div class="image-card" id="card-{{ v['id'] }}">
@@ -113,10 +124,12 @@
 
     {% if has_any_images %}
     <div class="redo-bar">
-      <span class="redo-count-text" id="redo-count">Select images to regenerate — unchecked images are kept</span>
-      <button type="button" class="btn-sm btn-outline" id="select-all-btn" onclick="toggleSelectAll()">Select All</button>
-      <button type="submit" class="btn" id="redo-btn" disabled
-              onclick="this.disabled=true; this.form.submit();">Redo Selected</button>
+      <span class="redo-count-text" id="redo-count">Select images to redo</span>
+      <div class="redo-bar-actions">
+        <button type="button" class="btn-sm btn-outline" id="select-all-btn" onclick="toggleSelectAll()">Select All</button>
+        <button type="submit" class="btn" id="redo-btn" disabled
+                onclick="syncVisionAndSubmit(this, 'redo-form')">Redo Selected</button>
+      </div>
     </div>
     {% endif %}
   </form>
@@ -139,6 +152,23 @@
     .catch(function() { setTimeout(poll, 5000); });
 })();
 {% endif %}
+
+function syncVisionAndSubmit(btn, formId) {
+  var vision = document.getElementById('vision-input').value.trim();
+  var hidden = document.getElementById(formId.replace('-form', '') === formId
+    ? formId + '-prompt-hidden'
+    : formId.replace('form', 'prompt-hidden'));
+  // Map form id → hidden input id
+  var hiddenMap = {
+    'gen-form':     'gen-prompt-hidden',
+    'missing-form': 'missing-prompt-hidden',
+    'redo-form':    'redo-prompt-hidden'
+  };
+  var h = document.getElementById(hiddenMap[formId]);
+  if (h) h.value = vision;
+  btn.disabled = true;
+  btn.closest('form').submit();
+}
 
 function updateRedoBar() {
   var boxes = Array.from(document.querySelectorAll('#redo-form input[type="checkbox"]'));

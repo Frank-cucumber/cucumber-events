@@ -186,18 +186,25 @@ def _fallback_taglines(event_name):
 
 def _fallback_image_prompts(event_name, count=5):
     import random
-    approaches = random.sample(_VISUAL_APPROACHES, min(count, len(_VISUAL_APPROACHES)))
-    while len(approaches) < count:
-        approaches.append(random.choice(_VISUAL_APPROACHES))
-    people = random.sample(_UNIFORM_PEOPLE, min(count, len(_UNIFORM_PEOPLE)))
-    while len(people) < count:
-        people.append(random.choice(_UNIFORM_PEOPLE))
-    return [
-        f"{person}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
-        f"{event_name} scene. {approach}. "
-        f"Pure white background, studio lighting, photorealistic, sharp focus, 8k."
-        for person, approach in zip(people[:count], approaches[:count])
-    ]
+    people   = random.sample(_UNIFORM_PEOPLE, min(2, len(_UNIFORM_PEOPLE)))
+    p_app    = random.sample(_PERSON_APPROACHES, min(2, len(_PERSON_APPROACHES)))
+    s_app    = random.sample(_SCENE_APPROACHES, min(count - 2, len(_SCENE_APPROACHES)))
+
+    prompts = []
+    # 2 person-in-uniform shots
+    for person, approach in zip(people, p_app):
+        prompts.append(
+            f"{person}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
+            f"{event_name} theme. {approach}. Photorealistic, sharp focus, 8k."
+        )
+    # Remaining slots: contextual/symbolic, no person needed
+    for approach in s_app[:count - 2]:
+        prompts.append(
+            f"Photorealistic image. {approach.format(event=event_name)}. Sharp focus, 8k."
+        )
+
+    random.shuffle(prompts)
+    return prompts[:count]
 
 
 def _ai_client():
@@ -211,16 +218,35 @@ def _ai_client():
             token = json.load(f)["claudeAiOauth"]["accessToken"]
     return anthropic.Anthropic(auth_token=token)
 
-_VISUAL_APPROACHES = [
-    "tight portrait, direct eye contact with camera, shallow depth of field, warm bokeh background",
-    "wide shot, person centred in frame, sense of space and purpose",
-    "candid side-on moment, subject unaware, natural documentary feel",
-    "group of 2-3 people interacting, human connection, warm and natural light",
-    "action shot mid-movement, energy and dynamism, motion blur background",
-    "moody split lighting, half shadow half warm light, contemplative expression",
-    "low angle looking up at subject, confident and empowering",
-    "subject looking off-camera, thoughtful and engaged",
+# Person shots — always wear the Cucumber uniform, real environmental backgrounds
+_PERSON_APPROACHES = [
+    "tight portrait, direct eye contact, warm smile, natural indoor setting, soft bokeh background, shallow depth of field",
+    "confident mid-shot standing in a professional environment, warm natural window light, depth of field",
+    "candid moment, subject looking slightly off-camera, thoughtful expression, blurred workplace background",
+    "low angle looking up, empowering and bold, outdoor environment with natural sky background",
 ]
+
+# Scene/symbolic shots — no person required, contextually unique to the event
+_SCENE_APPROACHES = [
+    "symbolic flat-lay of meaningful objects representing {event}, overhead shot, styled on a clean white surface, rich colours, studio lighting",
+    "wide atmospheric scene representing the spirit of {event}, evocative and emotional, golden hour light, no people, photojournalistic",
+    "close-up of hands in a meaningful gesture related to {event}, warm intimate lighting, shallow depth of field, blurred background",
+    "bold graphic composition: a single powerful symbolic object representing {event}, centred, minimal, striking colours, clean background",
+    "environmental wide shot capturing the feeling of {event}, real-world setting, documentary style, warm and human",
+]
+
+def _custom_image_prompts(scene_description, count=5):
+    import random
+    people = list(_UNIFORM_PEOPLE)
+    random.shuffle(people)
+    while len(people) < count:
+        people.extend(_UNIFORM_PEOPLE)
+    return [
+        f"{people[i]}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
+        f"{scene_description}. Photorealistic, sharp focus, 8k."
+        for i in range(count)
+    ]
+
 
 def ai_image_prompts(event_name, count=5, redo_indices=None, use_presets=False):
     """Image prompts — templates instantly; Claude only for custom events (one try)."""
@@ -532,10 +558,14 @@ def generate_images(event_id):
         ).fetchall()
         flash(f"Regenerated {len(redo_ids)} image variants", "success")
 
+    custom_prompt = request.form.get("custom_prompt", "").strip()
     redo_indices = [i for i, v in enumerate(variants) if v["id"] in redo_ids] if redo_ids else None
-    used_presets = bool(_lookup_batch_taglines(event["name"])) or taglines_fallback
-    prompts, _ = ai_image_prompts(
-        event["name"], len(variants), redo_indices=redo_indices, use_presets=used_presets)
+    if custom_prompt:
+        prompts = _custom_image_prompts(custom_prompt, len(variants))
+    else:
+        used_presets = bool(_lookup_batch_taglines(event["name"])) or taglines_fallback
+        prompts, _ = ai_image_prompts(
+            event["name"], len(variants), redo_indices=redo_indices, use_presets=used_presets)
 
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     out_dir = GFX_DIR / str(event_id)
