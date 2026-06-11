@@ -99,7 +99,28 @@ def init_db():
             conn.execute(
                 "CREATE UNIQUE INDEX idx_variants_event_num ON variants(event_id, variant_num)"
             )
+        _seed_batch_events(conn)
     _db_ready = True
+
+
+def _seed_batch_events(conn):
+    """Populate events + taglines from generate_batch.py if the DB is empty."""
+    if conn.execute("SELECT COUNT(*) FROM events").fetchone()[0] > 0:
+        return
+    import re as _re
+    for key, data in _BATCH_EVENTS.items():
+        # Extract clean name: strip the date part in parentheses
+        name = _re.sub(r"\s*\(.*?\)\s*$", "", data["label"]).rstrip("—– ").strip()
+        cur = conn.execute(
+            "INSERT INTO events (name, source) VALUES (?, 'batch')", (name,)
+        )
+        eid = cur.lastrowid
+        for i, (h, s) in enumerate(data["variants"][:5], 1):
+            conn.execute(
+                "INSERT INTO variants (event_id, variant_num, headline, subtext) VALUES (?,?,?,?)",
+                (eid, i, h, s)
+            )
+    conn.commit()
 
 
 def _dedupe_variants(conn):
