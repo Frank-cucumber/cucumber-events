@@ -193,11 +193,7 @@ def _fill_photo(photo_path, target_w, target_h, remove_bg=False):
         nw, nh = int(photo.width*ratio), int(photo.height*ratio)
         photo  = photo.resize((nw, nh), Image.LANCZOS)
         x_off  = (nw - target_w) // 2
-        # For very narrow crops (tall image, thin target) bias harder toward top so faces stay in frame.
-        # For near-square crops a small bias is enough.
-        crop_ratio = (nh - target_h) / nh if nh > target_h else 0
-        bias = 0.08 if crop_ratio < 0.3 else 0.05
-        y_off  = int((nh - target_h) * bias)
+        y_off  = 0  # always crop from the top — faces are prompted to be centred with headroom
         return photo.crop((x_off, y_off, x_off+target_w, y_off+target_h))
     except Exception:
         return None

@@ -330,7 +330,7 @@ def ai_image_prompts(event_name, count=5, redo_indices=None):
                 f"Each prompt must be specifically about {event_name}.\n\n"
                 f"RULES:\n"
                 f"- Any person shown must wear a dark forest green (#16661f) polo shirt and a company ID badge on a lanyard\n"
-                f"- When a person appears, keep their face fully visible and in the upper half of the frame\n"
+                f"- When a person appears: face must be fully visible, centred vertically in the frame, with at least 15% clear background above the top of the head — never crop the head\n"
                 f"- Vary the lighting and colour mood across the set\n"
                 f"- Image 1 ONLY: the subject must be centred in the frame (it will be cropped into a circle)\n\n"
                 f"Return ONLY a JSON array of {count} strings. Each ends with: photorealistic, sharp focus, 8k."
