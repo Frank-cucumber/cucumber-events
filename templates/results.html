@@ -32,6 +32,38 @@
           <div class="result-bar" style="width:{{ pct }}%"></div>
         </div>
         <div class="result-stat">{{ v['vote_count'] }} vote{{ 's' if v['vote_count'] != 1 }} ({{ pct }}%)</div>
+
+        {% if v['image_path'] %}
+        <div class="buffer-publish-box" id="bpbox-{{ v['id'] }}">
+          <textarea class="buffer-caption-input" id="bpcap-{{ v['id'] }}"
+            >{{ v['headline'] }}
+
+{{ v['subtext'] }}
+
+cucumber-recruitment.co.uk</textarea>
+          <div class="buffer-timing-row">
+            <label class="buffer-timing-opt">
+              <input type="radio" name="timing-{{ v['id'] }}" value="queue" checked
+                     onchange="updateTiming({{ v['id'] }})"> Add to queue
+            </label>
+            <label class="buffer-timing-opt">
+              <input type="radio" name="timing-{{ v['id'] }}" value="now"
+                     onchange="updateTiming({{ v['id'] }})"> Post now
+            </label>
+            <label class="buffer-timing-opt">
+              <input type="radio" name="timing-{{ v['id'] }}" value="schedule"
+                     onchange="updateTiming({{ v['id'] }})"> Schedule
+            </label>
+          </div>
+          <input type="datetime-local" class="buffer-dt-input" id="bpdt-{{ v['id'] }}"
+                 style="display:none">
+          <button class="btn buffer-publish-btn" id="bpbtn-{{ v['id'] }}"
+                  onclick="publishToBuffer(this, {{ v['id'] }})">
+            Publish to Buffer
+          </button>
+          <span class="buffer-publish-status" id="bpstatus-{{ v['id'] }}"></span>
+        </div>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
@@ -42,4 +74,61 @@
     <a class="btn-outline" href="{{ url_for('vote', event_id=event['id']) }}">Vote again</a>
   </div>
 </section>
+
+<script>
+var _bufferReady = {{ 'true' if buffer_ready else 'false' }};
+
+function updateTiming(variantId) {
+  var selected = document.querySelector('input[name="timing-' + variantId + '"]:checked').value;
+  var dtInput  = document.getElementById('bpdt-' + variantId);
+  dtInput.style.display = selected === 'schedule' ? 'block' : 'none';
+}
+
+function publishToBuffer(btn, variantId) {
+  var status = document.getElementById('bpstatus-' + variantId);
+  if (!_bufferReady) {
+    status.textContent = 'Add your BUFFER_TOKEN to .env (or Railway env vars) to enable posting.';
+    return;
+  }
+  var caption  = document.getElementById('bpcap-' + variantId).value.trim();
+  var timing   = document.querySelector('input[name="timing-' + variantId + '"]:checked').value;
+  var dtInput  = document.getElementById('bpdt-' + variantId);
+
+  var fd = new FormData();
+  fd.append('variant_id', variantId);
+  fd.append('caption',    caption);
+  if (timing === 'now') {
+    fd.append('post_now', '1');
+  } else if (timing === 'schedule') {
+    var dt = dtInput.value;
+    if (!dt) { status.textContent = 'Pick a date/time first.'; return; }
+    fd.append('scheduled_at', dt + ':00Z');
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Publishing...';
+  status.textContent = '';
+
+  fetch('{{ url_for("buffer_post", event_id=event["id"]) }}', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        btn.textContent = 'Published!';
+        btn.style.background = '#1a5c28';
+        status.textContent = timing === 'now' ? 'Posted to ' + d.profiles + ' account(s).'
+                           : timing === 'schedule' ? 'Scheduled across ' + d.profiles + ' account(s).'
+                           : 'Added to queue on ' + d.profiles + ' account(s).';
+      } else {
+        btn.textContent = 'Publish to Buffer';
+        btn.disabled = false;
+        status.textContent = d.error || 'Error — check BUFFER_TOKEN.';
+      }
+    })
+    .catch(function() {
+      btn.textContent = 'Publish to Buffer';
+      btn.disabled = false;
+      status.textContent = 'Request failed.';
+    });
+}
+</script>
 {% endblock %}

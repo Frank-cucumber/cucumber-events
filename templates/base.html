@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Cucumber Events{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ cache_bust }}">
 </head>
 <body>
   <header>
@@ -12,6 +12,12 @@
       <img src="/cucumber_logo.png" alt="Cucumber" onerror="this.style.display='none'">
       <span>Events Studio</span>
     </a>
+    <nav class="header-tabs">
+      <a class="header-tab {% if request.path == '/' or request.path.startswith('/events') %}header-tab--active{% endif %}"
+         href="/">Image Generator</a>
+      <a class="header-tab {% if request.path.startswith('/email') %}header-tab--active{% endif %}"
+         href="/email-template">Email Template</a>
+    </nav>
     <a class="btn" href="/events/new">+ New Event</a>
   </header>
 

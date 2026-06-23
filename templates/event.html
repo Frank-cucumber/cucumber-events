@@ -30,6 +30,31 @@
     </div>
   </div>
 
+  {# ── Format selector ─────────────────────────────────────────── #}
+  <div class="format-box">
+    <label class="format-label">Format</label>
+    <div class="format-options" id="format-options">
+      {% for key, label in format_labels.items() %}
+      <label class="format-chip {% if event['output_format'] == key or (not event['output_format'] and key == 'square') %}format-chip--active{% endif %}"
+             onclick="setFormat('{{ key }}')">
+        <input type="radio" name="output_format_picker" value="{{ key }}"
+               {% if event['output_format'] == key or (not event['output_format'] and key == 'square') %}checked{% endif %}>
+        {{ label }}
+      </label>
+      {% endfor %}
+    </div>
+    <input type="hidden" id="format-hidden" value="{{ event['output_format'] or 'square' }}">
+  </div>
+  <div id="format-notice" class="format-notice" style="display:none">
+    Format changed — <strong id="format-notice-label"></strong> will apply when you clear images and regenerate.
+    {% if has_any_images %}
+    <form method="post" action="{{ url_for('clear_images', event_id=event['id']) }}" style="display:inline"
+          onsubmit="return confirm('Clear all images and regenerate in the new format?')">
+      <button class="btn-sm" type="submit">Clear &amp; regenerate</button>
+    </form>
+    {% endif %}
+  </div>
+
   {# ── Vision box — always visible ────────────────────────────── #}
   <div class="vision-box">
     <label class="vision-label" for="vision-input">What do you have in mind?</label>
@@ -43,6 +68,7 @@
     <p>Click to generate 5 images — AI will write the taglines automatically.</p>
     <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}" id="gen-form">
       <input type="hidden" name="custom_prompt" id="gen-prompt-hidden">
+      <input type="hidden" name="output_format" id="gen-format-hidden">
       <button class="btn" type="submit" id="generate-btn"
               onclick="syncVisionAndSubmit(this, 'gen-form')">Generate Images</button>
     </form>
@@ -69,6 +95,7 @@
     <p>Some images are missing. Click to generate them.</p>
     <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}" id="missing-form">
       <input type="hidden" name="custom_prompt" id="missing-prompt-hidden">
+      <input type="hidden" name="output_format" id="missing-format-hidden">
       <button class="btn" type="submit"
               onclick="syncVisionAndSubmit(this, 'missing-form')">Generate Missing</button>
     </form>
@@ -85,28 +112,44 @@
   </div>
   {% endif %}
 
+
   <form method="post" action="{{ url_for('generate_images', event_id=event['id']) }}" id="redo-form">
     <input type="hidden" name="custom_prompt" id="redo-prompt-hidden">
-    <div class="image-grid">
+    <input type="hidden" name="output_format" id="redo-format-hidden">
+    <div class="image-grid" id="image-grid" data-fmt="{{ event['output_format'] or 'square' }}">
       {% for v in variants %}
       <div class="image-card" id="card-{{ v['id'] }}">
         {% if v['image_path'] %}
         <div class="card-img-wrap">
-          <img src="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}"
+          <img src="{{ url_for('serve_image', event_id=event['id'], filename='v' ~ v['variant_num'] ~ '.png') }}?t={{ v['generated_at'] or '' }}"
                alt="Variant {{ v['variant_num'] }}">
           <label class="card-select-overlay" title="Select to redo">
             <input type="checkbox" id="redo-{{ v['id'] }}" name="redo" value="{{ v['id'] }}"
                    onchange="updateRedoBar()">
             <span class="card-checkmark"></span>
           </label>
+          {% if all_generated and not already_voted %}
+          <div class="vote-overlay" onclick="selectVote({{ v['id'] }})" title="Click to select this image">
+            <span class="vote-overlay-label">Click to select</span>
+          </div>
+          {% elif all_generated and already_voted and voted_variant_id == v['id'] %}
+          <div class="vote-overlay vote-overlay--chosen">
+            <span class="vote-overlay-label">✓ Your vote</span>
+          </div>
+          {% endif %}
         </div>
         {% else %}
         <div class="img-placeholder">Generating…</div>
         {% endif %}
         <div class="image-card-body">
           <div class="variant-label">Variant {{ v['variant_num'] }}</div>
-          <strong>{{ v['headline'] }}</strong>
-          <span>{{ v['subtext'] }}</span>
+          <input type="text" class="variant-text-input variant-headline"
+                 id="hl-{{ v['id'] }}" name="headline_{{ v['id'] }}" value="{{ v['headline'] }}"
+                 placeholder="HEADLINE">
+          <input type="text" class="variant-text-input variant-subtext"
+                 id="st-{{ v['id'] }}" name="subtext_{{ v['id'] }}" value="{{ v['subtext'] }}"
+                 placeholder="SUBTEXT">
+          <button type="button" class="save-text-btn" onclick="saveText(this, {{ v['id'] }})">Save text</button>
           {% if v['vote_count'] > 0 %}
           <div class="vote-chip">{{ v['vote_count'] }} vote{{ 's' if v['vote_count'] != 1 }}</div>
           {% endif %}
@@ -116,6 +159,10 @@
              download="Cucumber_{{ event['name']|replace(' ', '_') }}_v{{ v['variant_num'] }}.png">
             ↓ Save image
           </a>
+          <button class="buffer-btn" id="buf-{{ v['id'] }}"
+                  onclick="queueToBuffer(this, {{ v['id'] }})">
+            Queue to Buffer
+          </button>
           {% endif %}
         </div>
       </div>
@@ -133,6 +180,22 @@
     </div>
     {% endif %}
   </form>
+
+  {% if all_generated %}
+  <div class="vote-confirm-bar" id="vote-confirm-bar">
+    {% if already_voted %}
+    <span class="vote-confirm-msg">You voted for <strong>Variant {{ variants | selectattr('id', 'equalto', voted_variant_id) | map(attribute='variant_num') | first }}</strong>.</span>
+    <form method="post" action="{{ url_for('unvote', event_id=event['id']) }}" style="display:inline" onsubmit="unvoteAjax(event, {{ event['id'] }})">
+      <button type="submit" class="btn-sm btn-outline">Change vote</button>
+    </form>
+    {% else %}
+    <span class="vote-confirm-msg" id="vote-confirm-msg">Click an image above to select your favourite</span>
+    <input type="text" id="voter-name" class="voter-name-input" placeholder="Your name (optional)">
+    <button class="btn" id="vote-submit-btn" disabled onclick="submitVote({{ event['id'] }})">Submit vote</button>
+    {% endif %}
+    <a class="btn-sm btn-outline" href="{{ url_for('results', event_id=event['id']) }}">See results</a>
+  </div>
+  {% endif %}
 
   {% endif %}
 </section>
@@ -153,15 +216,52 @@
 })();
 {% endif %}
 
+var _currentFormat = document.getElementById('format-hidden').value;
+var _formatLabels  = {{ format_labels | tojson }};
+var _formatRatios  = {
+  'square':    '1 / 1',
+  'story':     '9 / 16',
+  'landscape': '16 / 9',
+  'a4':        '1240 / 1754'
+};
+
+function setFormat(val) {
+  document.getElementById('format-hidden').value = val;
+
+  // Update active chip
+  document.querySelectorAll('.format-chip').forEach(function(c) {
+    c.classList.toggle('format-chip--active', c.querySelector('input').value === val);
+  });
+
+  // Resize image previews live via data attribute (CSS rules pick it up)
+  var grid = document.getElementById('image-grid');
+  if (grid) grid.setAttribute('data-fmt', val);
+
+  // Show/hide notice
+  var notice = document.getElementById('format-notice');
+  if (val !== _currentFormat) {
+    document.getElementById('format-notice-label').textContent = _formatLabels[val] || val;
+    notice.style.display = 'flex';
+  } else {
+    notice.style.display = 'none';
+  }
+}
+
 function syncVisionAndSubmit(btn, formId) {
-  var vision = document.getElementById('vision-input').value.trim();
-  var hiddenMap = {
+  var promptMap = {
     'gen-form':     'gen-prompt-hidden',
     'missing-form': 'missing-prompt-hidden',
     'redo-form':    'redo-prompt-hidden'
   };
-  var h = document.getElementById(hiddenMap[formId]);
-  if (h) h.value = vision;
+  var formatMap = {
+    'gen-form':     'gen-format-hidden',
+    'missing-form': 'missing-format-hidden',
+    'redo-form':    'redo-format-hidden'
+  };
+  var ph = document.getElementById(promptMap[formId]);
+  if (ph) ph.value = document.getElementById('vision-input').value.trim();
+  var fh = document.getElementById(formatMap[formId]);
+  if (fh) fh.value = document.getElementById('format-hidden').value;
   btn.disabled = true;
   btn.closest('form').submit();
 }
@@ -191,6 +291,66 @@ function toggleSelectAll() {
   updateRedoBar();
 }
 
+function saveText(btn, variantId) {
+  var headline = document.getElementById('hl-' + variantId).value.trim().toUpperCase();
+  var subtext  = document.getElementById('st-' + variantId).value.trim().toUpperCase();
+  if (!headline || !subtext) { alert('Headline and subtext cannot be empty.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  var fd = new FormData();
+  fd.append('headline', headline);
+  fd.append('subtext',  subtext);
+  fetch('/variants/' + variantId + '/text', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        document.getElementById('hl-' + variantId).value = headline;
+        document.getElementById('st-' + variantId).value = subtext;
+        btn.textContent = 'Saved!';
+        setTimeout(function() { btn.textContent = 'Save text'; btn.disabled = false; }, 1500);
+      } else {
+        btn.textContent = d.error || 'Error';
+        btn.disabled = false;
+      }
+    })
+    .catch(function() { btn.textContent = 'Failed'; btn.disabled = false; });
+}
+
+
+var _bufferReady = {{ 'true' if buffer_ready else 'false' }};
+
+function queueToBuffer(btn, variantId) {
+  if (!_bufferReady) {
+    btn.textContent = 'Add BUFFER_TOKEN to .env';
+    setTimeout(function() { btn.textContent = 'Queue to Buffer'; }, 3000);
+    return;
+  }
+  var headline = document.getElementById('hl-' + variantId).value.trim();
+  var subtext  = document.getElementById('st-' + variantId).value.trim();
+  var caption  = headline + '\n\n' + subtext + '\n\ncucumber-recruitment.co.uk';
+  btn.disabled = true;
+  btn.textContent = 'Queuing...';
+  var form = new FormData();
+  form.append('variant_id', variantId);
+  form.append('caption', caption);
+  fetch('{{ url_for("buffer_post", event_id=event["id"]) }}', { method: 'POST', body: form })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        btn.textContent = 'Queued!';
+        btn.classList.add('buffer-btn--done');
+      } else {
+        btn.textContent = d.error || 'Error';
+        btn.disabled = false;
+        btn.title = d.error || '';
+      }
+    })
+    .catch(function() {
+      btn.textContent = 'Failed';
+      btn.disabled = false;
+    });
+}
+
 function copyVoteLink() {
   var el = document.getElementById("voteUrl");
   if (!el) return;
@@ -200,6 +360,65 @@ function copyVoteLink() {
     c.style.display = "inline";
     setTimeout(function() { c.style.display = "none"; }, 2000);
   });
+}
+
+var _alreadyVoted = {{ 'true' if already_voted else 'false' }};
+var _selectedVoteId = null;
+
+function selectVote(variantId) {
+  if (_alreadyVoted) return;
+  _selectedVoteId = variantId;
+  document.querySelectorAll('.vote-overlay').forEach(function(el) {
+    el.classList.remove('vote-overlay--selected');
+    el.querySelector('.vote-overlay-label').textContent = 'Click to select';
+  });
+  var overlay = document.querySelector('#card-' + variantId + ' .vote-overlay');
+  if (overlay) {
+    overlay.classList.add('vote-overlay--selected');
+    overlay.querySelector('.vote-overlay-label').textContent = '✓ Selected';
+  }
+  var msg = document.getElementById('vote-confirm-msg');
+  if (msg) msg.textContent = 'Variant ' + document.querySelector('#card-' + variantId + ' .variant-label').textContent + ' selected';
+  var btn = document.getElementById('vote-submit-btn');
+  if (btn) btn.disabled = false;
+}
+
+function submitVote(eventId) {
+  if (!_selectedVoteId) return;
+  var name = (document.getElementById('voter-name') || {value: ''}).value.trim();
+  var fd = new FormData();
+  fd.append('variant_id', _selectedVoteId);
+  fd.append('voter_name', name || 'Anonymous');
+  var btn = document.getElementById('vote-submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+  fetch('/events/' + eventId + '/vote', {
+    method: 'POST',
+    headers: {'X-Requested-With': 'XMLHttpRequest'},
+    body: fd
+  }).then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        _alreadyVoted = true;
+        document.querySelectorAll('.vote-overlay').forEach(function(el) { el.remove(); });
+        var chosen = document.querySelector('#card-' + _selectedVoteId + ' .card-img-wrap');
+        if (chosen) {
+          var badge = document.createElement('div');
+          badge.className = 'vote-overlay vote-overlay--chosen';
+          badge.innerHTML = '<span class="vote-overlay-label">✓ Your vote</span>';
+          chosen.appendChild(badge);
+        }
+        var bar = document.getElementById('vote-confirm-bar');
+        if (bar) bar.innerHTML = '<span class="vote-confirm-msg">Vote recorded! <a href="/events/' + eventId + '/results">See results →</a></span>';
+      }
+    });
+}
+
+function unvoteAjax(e, eventId) {
+  e.preventDefault();
+  fetch('/events/' + eventId + '/unvote', {
+    method: 'POST',
+    headers: {'X-Requested-With': 'XMLHttpRequest'}
+  }).then(function() { location.reload(); });
 }
 </script>
 {% endblock %}

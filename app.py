@@ -39,11 +39,16 @@ _UNIFORM_PEOPLE = [
     "young mixed-race woman, curly hair, natural and professional pose",
 ]
 sys.path.insert(0, str(ROOT))
-from generate_graphic import generate as gen_graphic, _parse_ics
+from generate_graphic import generate as gen_graphic, _parse_ics, CANVAS_SIZES, FORMAT_LABELS
 from generate_batch import EVENTS as _BATCH_EVENTS
 
 app     = Flask(__name__)
 app.secret_key = "cucumber-events-secret"
+_BOOT_TS = str(int(time.time()))
+
+@app.context_processor
+def inject_globals():
+    return {"cache_bust": _BOOT_TS}
 DB_PATH = _DATA / "events.db"
 GFX_DIR = _DATA / "graphics" / "web"
 
@@ -65,11 +70,12 @@ def init_db():
     with sqlite3.connect(DB_PATH) as conn:
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS events (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                name        TEXT    NOT NULL,
-                event_date  TEXT,
-                source      TEXT    DEFAULT 'custom',
-                created_at  TEXT    DEFAULT CURRENT_TIMESTAMP
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                name          TEXT    NOT NULL,
+                event_date    TEXT,
+                source        TEXT    DEFAULT 'custom',
+                output_format TEXT    DEFAULT 'square',
+                created_at    TEXT    DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS variants (
                 id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,10 +94,12 @@ def init_db():
                 created_at  TEXT    DEFAULT CURRENT_TIMESTAMP
             );
         """)
-        # Migrate existing DBs that don't have ip_address yet
         cols = [r[1] for r in conn.execute("PRAGMA table_info(votes)").fetchall()]
         if "ip_address" not in cols:
             conn.execute("ALTER TABLE votes ADD COLUMN ip_address TEXT")
+        ecols = [r[1] for r in conn.execute("PRAGMA table_info(events)").fetchall()]
+        if "output_format" not in ecols:
+            conn.execute("ALTER TABLE events ADD COLUMN output_format TEXT DEFAULT 'square'")
 
         _dedupe_variants(conn)
         indexes = [r[1] for r in conn.execute("PRAGMA index_list(variants)").fetchall()]
@@ -235,19 +243,18 @@ def _fallback_taglines(event_name):
 
 def _fallback_image_prompts(event_name, count=5):
     import random
-    people   = random.sample(_UNIFORM_PEOPLE, min(2, len(_UNIFORM_PEOPLE)))
-    p_app    = random.sample(_PERSON_APPROACHES, min(2, len(_PERSON_APPROACHES)))
-    s_app    = random.sample(_SCENE_APPROACHES, min(count - 2, len(_SCENE_APPROACHES)))
+    people = random.sample(_UNIFORM_PEOPLE, min(2, len(_UNIFORM_PEOPLE)))
+    p_app  = random.sample(_PERSON_APPROACHES, min(2, len(_PERSON_APPROACHES)))
+    s_app  = random.sample(_SCENE_APPROACHES, min(count - 2, len(_SCENE_APPROACHES)))
 
     prompts = []
     for person, approach in zip(people, p_app):
         prompts.append(
-            f"{person}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
-            f"{event_name} theme. {approach}. Photorealistic, sharp focus, 8k."
+            f"{person}. {event_name}. {approach}. Photorealistic, warm natural lighting, sharp focus, 8k."
         )
     for approach in s_app[:count - 2]:
         prompts.append(
-            f"Photorealistic image. {approach.format(event=event_name)}. Sharp focus, 8k."
+            f"Photorealistic image. {approach.format(event=event_name)}. Warm natural lighting, sharp focus, 8k."
         )
 
     random.shuffle(prompts)
@@ -265,21 +272,21 @@ def _ai_client():
             token = json.load(f)["claudeAiOauth"]["accessToken"]
     return anthropic.Anthropic(auth_token=token)
 
-# Person shots — always wear the Cucumber uniform, real environmental backgrounds
+# Care-specific person shots — real care settings, not office environments
 _PERSON_APPROACHES = [
-    "tight portrait, direct eye contact, warm smile, natural indoor setting, soft bokeh background, shallow depth of field",
-    "confident mid-shot standing in a professional environment, warm natural window light, depth of field",
-    "candid moment, subject looking slightly off-camera, thoughtful expression, blurred workplace background",
-    "low angle looking up, empowering and bold, outdoor environment with natural sky background",
+    "warm portrait of a care worker with an elderly resident in a bright care home lounge, natural window light, soft bokeh",
+    "carer supporting a patient in a hospital ward, empathetic and professional, documentary style, candid moment",
+    "care worker kneeling to speak at eye level with an elderly person in a wheelchair, warm and human, shallow depth of field",
+    "nurse or support worker in scrubs outdoors at a care facility entrance, empowering and bold, natural sky background",
 ]
 
-# Scene/symbolic shots — no person required, contextually unique to the event
+# Scene/symbolic shots — contextually specific to the event
 _SCENE_APPROACHES = [
-    "symbolic flat-lay of meaningful objects representing {event}, overhead shot, styled on a clean white surface, rich colours, studio lighting",
-    "wide atmospheric scene representing the spirit of {event}, evocative and emotional, golden hour light, no people, photojournalistic",
-    "close-up of hands in a meaningful gesture related to {event}, warm intimate lighting, shallow depth of field, blurred background",
-    "bold graphic composition: a single powerful symbolic object representing {event}, centred, minimal, striking colours, clean background",
-    "environmental wide shot capturing the feeling of {event}, real-world setting, documentary style, warm and human",
+    "close-up of two hands clasped together — a carer and an elderly person — warm intimate lighting, shallow depth of field, blurred care home background",
+    "wide atmospheric shot of a care home garden in golden hour light, peaceful and warm, no people, photojournalistic",
+    "symbolic flat-lay of meaningful objects representing {event}, overhead shot, clean surface, rich colours, studio lighting",
+    "close-up of a stethoscope, ID badge lanyard, and a flower on a wooden surface — symbolic of {event}, warm light",
+    "environmental wide shot of a care home corridor with warm lighting, documentary style, sense of community and purpose",
 ]
 
 _VISUAL_APPROACHES = [
@@ -300,39 +307,33 @@ def _custom_image_prompts(scene_description, count=5):
     while len(people) < count:
         people.extend(_UNIFORM_PEOPLE)
     return [
-        f"{people[i]}, dressed in a dark forest green (#1a5c28) polo shirt with a company ID badge on a lanyard. "
-        f"{scene_description}. Photorealistic, sharp focus, 8k."
+        f"{people[i]}, working in a care or healthcare setting. "
+        f"{scene_description}. Photorealistic, warm natural lighting, sharp focus, 8k."
         for i in range(count)
     ]
 
 
-def ai_image_prompts(event_name, count=5, redo_indices=None, use_presets=False):
-    """Image prompts — templates instantly; Claude only for custom events (one try)."""
-    if use_presets or _lookup_batch_taglines(event_name):
-        return _fallback_image_prompts(event_name, count), True
-    import random
-    approaches = random.sample(_VISUAL_APPROACHES, min(count, len(_VISUAL_APPROACHES)))
-    while len(approaches) < count:
-        approaches.append(random.choice(_VISUAL_APPROACHES))
-    redo_note = ""
-    if redo_indices:
-        redo_note = (
-            f"\nIMPORTANT: Regenerating variants {[i+1 for i in redo_indices]}. "
-            f"Be bold and unexpected.\n"
-        )
-    approach_list = "\n".join(f"  Variant {i+1}: {a}" for i, a in enumerate(approaches))
+def ai_image_prompts(event_name, count=5, redo_indices=None):
+    """Ask Claude for visually varied image prompts for this event."""
     try:
         client = _ai_client()
-        msg = client.messages.create(
+        msg = _claude_create(
+            client,
             model="claude-haiku-4-5-20251001",
-            max_tokens=900,
+            max_tokens=1000,
             messages=[{"role": "user", "content": (
-                f"Write {count} image generation prompts for: {event_name}\n{redo_note}\n"
-                f"Approaches:\n{approach_list}\n\n"
-                f"Every prompt MUST open by describing a specific person dressed in a dark forest green (#1a5c28) polo shirt and a company ID badge on a lanyard. "
-                f"Then describe the scene using the assigned approach.\n"
-                f"End every prompt with: pure white background, studio lighting, photorealistic, sharp focus, 8k\n"
-                f"Return ONLY a JSON array of {count} strings."
+                f"Write {count} image generation prompts for: {event_name}\n"
+                f"Context: Cucumber Recruitment, UK care staffing agency.\n\n"
+                f"Make the {count} images visually varied — different subjects, settings, moods, and distances. "
+                f"Mix freely from: portraits, candid mid-shots, wide scenes, object/detail close-ups, action moments — "
+                f"no fixed quota for any type, just genuine variety across the set. "
+                f"Each prompt must be specifically about {event_name}.\n\n"
+                f"RULES:\n"
+                f"- Any person shown must wear a dark forest green (#16661f) polo shirt and a company ID badge on a lanyard\n"
+                f"- When a person appears, keep their face fully visible and in the upper half of the frame\n"
+                f"- Vary the lighting and colour mood across the set\n"
+                f"- Image 1 ONLY: the subject must be centred in the frame (it will be cropped into a circle)\n\n"
+                f"Return ONLY a JSON array of {count} strings. Each ends with: photorealistic, sharp focus, 8k."
             )}],
         )
         raw = msg.content[0].text.strip()
@@ -379,6 +380,43 @@ def _nano_banana_photo(prompt, out_path):
     return False
 
 
+
+
+def _ai_fresh_taglines(event_name, count=5):
+    """Always call Claude for new taglines — never returns presets. Used for redo."""
+    date_hint = ""
+    prompt = (
+        f"You are a copywriter for Cucumber Recruitment, a UK healthcare staffing agency.\n"
+        f"Generate {count} FRESH, VARIED social media graphic taglines for: {event_name}\n\n"
+        f"Rules:\n"
+        f"- HEADLINE: 2–5 words, ALL CAPS, punchy and direct\n"
+        f"- SUBTEXT: 5–8 words, ALL CAPS, warm and supportive\n"
+        f"- Each must feel distinct — vary the angle and tone\n"
+        f"- Do NOT use these overused openers: CELEBRATE, HAPPY, PROUD\n"
+        f"- No hashtags, no emojis, no punctuation beyond full stops and commas\n\n"
+        f"Return ONLY a JSON array:\n"
+        f'[{{"headline": "...", "subtext": "..."}}, ...]'
+    )
+    try:
+        client = _ai_client()
+        msg = _claude_create(
+            client,
+            model="claude-haiku-4-5-20251001",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = msg.content[0].text.strip()
+        match = re.search(r'\[.*\]', raw, re.DOTALL)
+        if match:
+            raw = match.group(0)
+        pairs = json.loads(raw)
+        return [(p["headline"].upper(), p["subtext"].upper()) for p in pairs[:count]]
+    except Exception as e:
+        app.logger.warning("Fresh taglines failed for %s (%s), shuffling presets", event_name, e)
+        import random
+        fallback = list(_fallback_taglines(event_name))
+        random.shuffle(fallback)
+        return fallback
 
 
 def ai_generate_taglines(event_name, event_date=None):
@@ -545,13 +583,24 @@ def event_detail(event_id):
         WHERE v.event_id=?
         GROUP BY v.id ORDER BY v.variant_num
     """, (event_id,)).fetchall()
+    ip = request.remote_addr or ""
+    existing_vote = db.execute(
+        """SELECT vo.variant_id, v.variant_num FROM votes vo
+           JOIN variants v ON v.id = vo.variant_id
+           WHERE v.event_id=? AND vo.ip_address=?
+           ORDER BY vo.id DESC LIMIT 1""",
+        (event_id, ip)
+    ).fetchone()
     db.close()
     all_generated  = bool(variants) and all(v["image_path"] for v in variants)
     has_any_images = any(v["image_path"] for v in variants)
     return render_template("event.html",
         event=event, variants=variants, all_generated=all_generated,
         has_any_images=has_any_images, generating=False,
-        gen_progress=None)
+        gen_progress=None, format_labels=FORMAT_LABELS,
+        buffer_enabled=True, buffer_ready=bool(_buffer_token()),
+        already_voted=bool(existing_vote),
+        voted_variant_id=existing_vote["variant_id"] if existing_vote else None)
 
 
 @app.route("/events/<int:event_id>/gen-status")
@@ -600,27 +649,45 @@ def generate_images(event_id):
     ).fetchall()
 
     if redo_ids:
-        for v in variants:
-            if v["id"] in redo_ids:
-                photo = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
-                photo.unlink(missing_ok=True)
-                Path(str(photo) + ".rmbg.png").unlink(missing_ok=True)
-                (GFX_DIR / str(event_id) / f"v{v['variant_num']}.png").unlink(missing_ok=True)
-                db.execute("UPDATE variants SET image_path=NULL WHERE id=?", (v["id"],))
+        redo_variants = [v for v in variants if v["id"] in redo_ids]
+        fresh_pairs = _ai_fresh_taglines(event["name"], len(redo_variants))
+        for i, v in enumerate(redo_variants):
+            form_hl = request.form.get(f"headline_{v['id']}", "").strip().upper()
+            form_st = request.form.get(f"subtext_{v['id']}",  "").strip().upper()
+            # Use manually edited text if user changed it; otherwise fresh AI text
+            user_edited = (form_hl and form_hl != v["headline"].upper()) or \
+                          (form_st and form_st != v["subtext"].upper())
+            if user_edited:
+                new_hl = form_hl or v["headline"]
+                new_st = form_st or v["subtext"]
+            else:
+                new_hl, new_st = fresh_pairs[i % len(fresh_pairs)]
+            db.execute("UPDATE variants SET headline=?, subtext=? WHERE id=?",
+                       (new_hl, new_st, v["id"]))
+            photo = PHOTO_DIR / f"ev{event_id}_v{v['variant_num']}.jpg"
+            photo.unlink(missing_ok=True)
+            Path(str(photo) + ".rmbg.png").unlink(missing_ok=True)
+            (GFX_DIR / str(event_id) / f"v{v['variant_num']}.png").unlink(missing_ok=True)
+            db.execute("UPDATE variants SET image_path=NULL WHERE id=?", (v["id"],))
         db.commit()
         variants = db.execute(
             "SELECT * FROM variants WHERE event_id=? ORDER BY variant_num", (event_id,)
         ).fetchall()
-        flash(f"Regenerated {len(redo_ids)} image variants", "success")
+        flash(f"Regenerated {len(redo_ids)} image variant(s)", "success")
+
+    fmt = request.form.get("output_format", "square")
+    if fmt in CANVAS_SIZES:
+        db.execute("UPDATE events SET output_format=? WHERE id=?", (fmt, event_id))
+        db.commit()
+    else:
+        fmt = event["output_format"] or "square"
 
     custom_prompt = request.form.get("custom_prompt", "").strip()
     redo_indices = [i for i, v in enumerate(variants) if v["id"] in redo_ids] if redo_ids else None
     if custom_prompt:
         prompts = _custom_image_prompts(custom_prompt, len(variants))
     else:
-        used_presets = bool(_lookup_batch_taglines(event["name"])) or taglines_fallback
-        prompts, _ = ai_image_prompts(
-            event["name"], len(variants), redo_indices=redo_indices, use_presets=used_presets)
+        prompts, _ = ai_image_prompts(event["name"], len(variants), redo_indices=redo_indices)
 
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     out_dir = GFX_DIR / str(event_id)
@@ -638,7 +705,7 @@ def generate_images(event_id):
             return (v["id"], None, False)
         try:
             gen_graphic(v["headline"], v["subtext"], "cucumber-recruitment.co.uk",
-                        str(out), photo_path=str(photo))
+                        str(out), photo_path=str(photo), template=v["variant_num"], size=fmt)
             return (v["id"], str(out), True)
         except Exception as e:
             app.logger.error("Render v%s: %s", v["variant_num"], e)
@@ -658,9 +725,9 @@ def generate_images(event_id):
     db.close()
 
     if ok:
-        flash(f"Generated {ok} image(s) via Nano Banana.", "success")
+        flash(f"Generated {ok} image(s).", "success")
     elif not redo_ids:
-        flash("Image generation failed — check your NANO_BANANA_KEY.", "error")
+        flash("Image generation failed — check PEXELS_API_KEY and NANO_BANANA_KEY.", "error")
 
     return redirect(url_for("event_detail", event_id=event_id))
 
@@ -684,11 +751,15 @@ def vote(event_id):
     ).fetchone()
     already_voted = event_id in voted_events or bool(existing_vote)
 
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
     if request.method == "POST":
         if already_voted:
             db.close()
+            if is_ajax:
+                return jsonify({"error": "Already voted"}), 400
             flash("You've already voted on this event.", "error")
-            return redirect(url_for("results", event_id=event_id))
+            return redirect(url_for("event_detail", event_id=event_id))
         variant_id = request.form.get("variant_id", type=int)
         voter_name = (request.form.get("voter_name") or "Anonymous").strip()
         if variant_id:
@@ -698,7 +769,9 @@ def vote(event_id):
             voted_events.append(event_id)
             session["voted_events"] = voted_events
         db.close()
-        return redirect(url_for("results", event_id=event_id))
+        if is_ajax:
+            return jsonify({"ok": True, "variant_id": variant_id})
+        return redirect(url_for("event_detail", event_id=event_id))
 
     variants = db.execute(
         "SELECT * FROM variants WHERE event_id=? AND image_path IS NOT NULL ORDER BY variant_num",
@@ -723,7 +796,9 @@ def unvote(event_id):
     db.close()
     voted_events = session.get("voted_events", [])
     session["voted_events"] = [e for e in voted_events if e != event_id]
-    return redirect(url_for("vote", event_id=event_id))
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"ok": True})
+    return redirect(url_for("event_detail", event_id=event_id))
 
 
 @app.route("/events/<int:event_id>/results")
@@ -741,7 +816,8 @@ def results(event_id):
     """, (event_id,)).fetchall()
     total = sum(v["vote_count"] for v in variants)
     db.close()
-    return render_template("results.html", event=event, variants=variants, total=total)
+    return render_template("results.html", event=event, variants=variants, total=total,
+                           buffer_enabled=True, buffer_ready=bool(_buffer_token()))
 
 
 @app.route("/events/<int:event_id>/delete", methods=["POST"])
@@ -803,8 +879,7 @@ def _run_generate_all():
                 (eid,)
             ).fetchall()
 
-            used_presets = bool(_lookup_batch_taglines(name))
-            prompts, _ = ai_image_prompts(name, len(variants), use_presets=used_presets)
+            prompts, _ = ai_image_prompts(name, len(variants))
             out_dir = GFX_DIR / str(eid)
             out_dir.mkdir(parents=True, exist_ok=True)
             now = datetime.utcnow().isoformat()
@@ -818,7 +893,7 @@ def _run_generate_all():
                     return (v["id"], None)
                 try:
                     gen_graphic(v["headline"], v["subtext"], "cucumber-recruitment.co.uk",
-                                str(out), photo_path=str(photo))
+                                str(out), photo_path=str(photo), template=v["variant_num"])
                     return (v["id"], str(out))
                 except Exception as e:
                     app.logger.error("gen-all render %s: %s", v["variant_num"], e)
@@ -862,9 +937,102 @@ def generate_all_status():
     return jsonify(_gen_all_state)
 
 
+@app.route("/email-template")
+def email_template():
+    return render_template("email_template.html")
+
+
 @app.route("/cucumber_logo.png")
 def serve_logo():
     return send_from_directory(ROOT, "cucumber_logo.png")
+
+
+# ── Variant text editing ─────────────────────────────────────────────
+
+@app.route("/variants/<int:variant_id>/text", methods=["POST"])
+def update_variant_text(variant_id):
+    headline = request.form.get("headline", "").strip().upper()
+    subtext  = request.form.get("subtext",  "").strip().upper()
+    if not headline or not subtext:
+        return jsonify({"error": "Headline and subtext cannot be empty"}), 400
+    db = get_db()
+    row = db.execute("SELECT id FROM variants WHERE id=?", (variant_id,)).fetchone()
+    if not row:
+        db.close()
+        return jsonify({"error": "Variant not found"}), 404
+    db.execute("UPDATE variants SET headline=?, subtext=? WHERE id=?",
+               (headline, subtext, variant_id))
+    db.commit()
+    db.close()
+    return jsonify({"ok": True})
+
+
+# ── Buffer ────────────────────────────────────────────────────────────
+
+_BUFFER_API = "https://api.bufferapp.com/1"
+
+
+def _buffer_token():
+    return os.environ.get("BUFFER_TOKEN", "")
+
+
+@app.route("/events/<int:event_id>/buffer", methods=["POST"])
+def buffer_post(event_id):
+    token = _buffer_token()
+    if not token:
+        return jsonify({"error": "BUFFER_TOKEN not set in environment"}), 400
+
+    variant_id = request.form.get("variant_id", type=int)
+    caption    = request.form.get("caption", "").strip()
+
+    db      = get_db()
+    event   = db.execute("SELECT * FROM events WHERE id=?", (event_id,)).fetchone()
+    variant = db.execute("SELECT * FROM variants WHERE id=?", (variant_id,)).fetchone()
+    db.close()
+
+    if not event or not variant or not variant["image_path"]:
+        return jsonify({"error": "Image not found"}), 404
+
+    try:
+        prof_r = req_lib.get(f"{_BUFFER_API}/profiles.json",
+                             params={"access_token": token}, timeout=10)
+        if prof_r.status_code != 200:
+            return jsonify({"error": f"Buffer auth failed ({prof_r.status_code})"}), 400
+        profiles = prof_r.json()
+    except Exception as e:
+        return jsonify({"error": f"Could not reach Buffer: {e}"}), 500
+
+    if not profiles:
+        return jsonify({"error": "No Buffer profiles connected"}), 400
+
+    if not caption:
+        caption = (
+            f"{variant['headline']}\n\n"
+            f"{variant['subtext']}\n\n"
+            f"cucumber-recruitment.co.uk"
+        )
+
+    image_url    = url_for("serve_image", event_id=event_id,
+                           filename=f"v{variant['variant_num']}.png", _external=True)
+    scheduled_at = request.form.get("scheduled_at", "").strip()
+    post_now     = request.form.get("post_now", "") == "1"
+
+    data = [("access_token", token), ("text", caption), ("media[photo]", image_url)]
+    for p in profiles:
+        data.append(("profile_ids[]", p["id"]))
+    if scheduled_at:
+        data.append(("scheduled_at", scheduled_at))
+    elif post_now:
+        data.append(("now", "true"))
+
+    try:
+        post_r = req_lib.post(f"{_BUFFER_API}/updates/create.json", data=data, timeout=15)
+        if post_r.status_code == 200:
+            return jsonify({"ok": True, "profiles": len(profiles)})
+        err = post_r.json().get("message", "Unknown error")
+        return jsonify({"error": err}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Always run on startup (works with both gunicorn and direct)
