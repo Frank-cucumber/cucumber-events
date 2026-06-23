@@ -322,12 +322,20 @@ def ai_image_prompts(event_name, count=5, redo_indices=None):
             model="claude-haiku-4-5-20251001",
             max_tokens=1000,
             messages=[{"role": "user", "content": (
-                f"Write {count} image generation prompts for: {event_name}\n"
+                f"Write {count} image generation prompts for a social media graphic about: {event_name}\n"
                 f"Context: Cucumber Recruitment, UK care staffing agency.\n\n"
-                f"Make the {count} images visually varied — different subjects, settings, moods, and distances. "
-                f"Mix freely from: portraits, candid mid-shots, wide scenes, object/detail close-ups, action moments — "
-                f"no fixed quota for any type, just genuine variety across the set. "
-                f"Each prompt must be specifically about {event_name}.\n\n"
+                f"CRITICAL: Each image must be VISUALLY UNMISTAKABLE as {event_name}. "
+                f"A viewer with no text should immediately recognise what the image is about. "
+                f"Think: what colours, symbols, settings, objects, activities, or emotions are unique to {event_name}? "
+                f"Build those visual elements INTO the scene — do not just put a person standing around.\n\n"
+                f"Examples of what 'visually specific' means:\n"
+                f"- Pride Month → rainbow colours, celebration, joy, pride flags, diverse group\n"
+                f"- Mental Health Awareness → calm nature setting, hands holding, hopeful light, green spaces\n"
+                f"- Nurses Day → clinical setting, caring gesture, hands-on patient care\n"
+                f"- Anti-Bullying Week → hands joined together, unity, warm supportive gesture\n"
+                f"Apply this thinking to {event_name} — use its specific symbols, palette and mood.\n\n"
+                f"Make the {count} images visually varied in composition — mix freely from portraits, "
+                f"candid mid-shots, wide scenes, object/detail close-ups, action moments.\n\n"
                 f"RULES:\n"
                 f"- Any person shown must wear a dark forest green (#16661f) polo shirt and a company ID badge on a lanyard\n"
                 f"- When a person appears: face must be fully visible, centred vertically in the frame, with at least 15% clear background above the top of the head — never crop the head\n"
@@ -727,7 +735,7 @@ def generate_images(event_id):
     if ok:
         flash(f"Generated {ok} image(s).", "success")
     elif not redo_ids:
-        flash("Image generation failed — check PEXELS_API_KEY and NANO_BANANA_KEY.", "error")
+        flash("Image generation failed — check your NANO_BANANA_KEY.", "error")
 
     return redirect(url_for("event_detail", event_id=event_id))
 
