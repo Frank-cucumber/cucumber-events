@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Care News — Cucumber Events{% endblock %}
+
+{% block content %}
+<section>
+  <div class="index-header">
+    <div>
+      <h2>Care News</h2>
+      <p class="news-source-credit">Source: <a href="https://www.communitycare.co.uk" target="_blank" rel="noopener">Community Care</a> &mdash; refreshes every 30 min</p>
+    </div>
+    <a class="btn btn-outline" href="/care-news?refresh=1">Refresh</a>
+  </div>
+
+  {% if error %}
+  <div class="alert">{{ error }}</div>
+  {% else %}
+
+  <div class="news-filter-row">
+    <button class="news-filter-btn news-filter-btn--active" onclick="filterNews('all', this)">All</button>
+    <button class="news-filter-btn" onclick="filterNews('Children', this)">Children</button>
+    <button class="news-filter-btn" onclick="filterNews('Adults', this)">Adults</button>
+  </div>
+
+  <div class="news-grid" id="news-grid">
+    {% for a in articles %}
+    <a class="news-card" href="{{ a.link }}" target="_blank" rel="noopener" data-cat="{{ a.category }}">
+      <div class="news-card-top">
+        <span class="news-badge news-badge--{{ a.category | lower }}">{{ a.category }}</span>
+        {% if a.pub_date %}
+        <span class="news-pub-date">{{ a.pub_date[:16] }}</span>
+        {% endif %}
+      </div>
+      <p class="news-title">{{ a.title }}</p>
+      {% if a.description %}
+      <p class="news-desc">{{ a.description }}</p>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  <script>
+    function filterNews(cat, btn) {
+      document.querySelectorAll('.news-filter-btn').forEach(b => b.classList.remove('news-filter-btn--active'));
+      btn.classList.add('news-filter-btn--active');
+      document.querySelectorAll('.news-card').forEach(card => {
+        card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+      });
+    }
+  </script>
+  {% endif %}
+</section>
+{% endblock %}

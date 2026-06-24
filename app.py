@@ -8,6 +8,8 @@ import sys
 import re
 import json
 import time
+import threading
+import xml.etree.ElementTree as ET
 import anthropic
 import requests as req_lib
 from concurrent.futures import ThreadPoolExecutor
@@ -1041,6 +1043,48 @@ def buffer_post(event_id):
         return jsonify({"error": err}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ── Care News ────────────────────────────────────────────────────
+
+_NEWS_FEEDS = [
+    ("Children", "https://www.communitycare.co.uk/category/children-young-people/feed/"),
+    ("Adults",   "https://www.communitycare.co.uk/category/adults/feed/"),
+]
+_NEWS_CACHE = {"data": None, "ts": 0}
+_NEWS_LOCK  = threading.Lock()
+_NEWS_TTL   = 1800  # 30 min
+
+def _fetch_news():
+    articles = []
+    for category, url in _NEWS_FEEDS:
+        try:
+            r = req_lib.get(url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+            r.raise_for_status()
+            root = ET.fromstring(r.content)
+            for item in root.findall(".//item"):
+                title = (item.findtext("title") or "").strip()
+                link  = (item.findtext("link")  or "").strip()
+                desc  = re.sub(r"<[^>]+>", "", item.findtext("description") or "")[:220].strip()
+                pub   = (item.findtext("pubDate") or "").strip()
+                if title and link:
+                    articles.append({"category": category, "title": title,
+                                     "link": link, "description": desc, "pub_date": pub})
+        except Exception:
+            pass
+    return articles
+
+@app.route("/care-news")
+def care_news():
+    bust = request.args.get("refresh") == "1"
+    with _NEWS_LOCK:
+        now = time.time()
+        if bust or not _NEWS_CACHE["data"] or now - _NEWS_CACHE["ts"] > _NEWS_TTL:
+            _NEWS_CACHE["data"] = _fetch_news()
+            _NEWS_CACHE["ts"] = now
+        articles = list(_NEWS_CACHE["data"])
+    error = None if articles else "Could not load news right now. Please try refreshing."
+    return render_template("care_news.html", articles=articles, error=error)
 
 
 # Always run on startup (works with both gunicorn and direct)
