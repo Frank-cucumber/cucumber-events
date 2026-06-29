@@ -6,7 +6,7 @@
   <div class="index-header">
     <div>
       <h2>Care News</h2>
-      <p class="news-source-credit">Source: <a href="https://www.communitycare.co.uk" target="_blank" rel="noopener">Community Care</a> &mdash; refreshes every 30 min</p>
+      <p class="news-source-credit">Sources: <a href="https://www.theguardian.com/society/social-care" target="_blank" rel="noopener">Guardian Social Care</a> &middot; <a href="https://www.gov.uk/government/organisations/department-of-health-and-social-care" target="_blank" rel="noopener">GOV.UK / DHSC</a> &middot; <a href="https://medium.com/@CareQualityComm" target="_blank" rel="noopener">CQC</a> &mdash; refreshes every 30 min</p>
     </div>
     <a class="btn btn-outline" href="/care-news?refresh=1">Refresh</a>
   </div>
@@ -16,9 +16,10 @@
   {% else %}
 
   <div class="news-filter-row">
-    <button class="news-filter-btn news-filter-btn--active" onclick="filterNews('all', this)">All</button>
+    <button class="news-filter-btn news-filter-btn--active" onclick="filterNews('all', this)">All ({{ articles|length }})</button>
     <button class="news-filter-btn" onclick="filterNews('Children', this)">Children</button>
     <button class="news-filter-btn" onclick="filterNews('Adults', this)">Adults</button>
+    <button class="news-filter-btn" onclick="filterNews('General', this)">General</button>
   </div>
 
   <div class="news-grid" id="news-grid">
@@ -26,14 +27,13 @@
     <a class="news-card" href="{{ a.link }}" target="_blank" rel="noopener" data-cat="{{ a.category }}">
       <div class="news-card-top">
         <span class="news-badge news-badge--{{ a.category | lower }}">{{ a.category }}</span>
-        {% if a.pub_date %}
-        <span class="news-pub-date">{{ a.pub_date[:16] }}</span>
-        {% endif %}
+        <span class="news-pub-date">{{ a.pub_date }}</span>
       </div>
       <p class="news-title">{{ a.title }}</p>
       {% if a.description %}
       <p class="news-desc">{{ a.description }}</p>
       {% endif %}
+      <span class="news-source-tag">{{ a.source }}</span>
     </a>
     {% endfor %}
   </div>

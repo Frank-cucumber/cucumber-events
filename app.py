@@ -27,7 +27,13 @@ if _env_file.exists():
 
 # On Railway use /data (persistent volume); locally use project dir
 _ON_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
-_DATA       = Path("/tmp") if _ON_RAILWAY else ROOT
+_ON_FLY     = bool(os.environ.get("FLY_APP_NAME"))
+if _ON_RAILWAY:
+    _DATA = Path("/tmp")
+elif _ON_FLY:
+    _DATA = Path("/data")
+else:
+    _DATA = ROOT
 PHOTO_DIR   = _DATA / "photos" / "web"
 
 _NB_PRO_URL     = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
@@ -1048,28 +1054,63 @@ def buffer_post(event_id):
 # ── Care News ────────────────────────────────────────────────────
 
 _NEWS_FEEDS = [
-    ("Children", "https://www.communitycare.co.uk/category/children-young-people/feed/"),
-    ("Adults",   "https://www.communitycare.co.uk/category/adults/feed/"),
+    ("Guardian Social Care", "rss",  "https://www.theguardian.com/society/social-care/rss"),
+    ("GOV.UK / DHSC",        "atom", "https://www.gov.uk/government/organisations/department-of-health-and-social-care.atom"),
+    ("CQC",                  "rss",  "https://medium.com/feed/@CareQualityComm"),
 ]
+
+_CHILDREN_KW = {"child", "children", "young people", "young person", "safeguarding",
+                "camhs", "fostering", "adoption", "looked after", "child protection",
+                "early years", "family", "infant", "teenager", "adolescent", "school"}
+_ADULTS_KW   = {"adult", "elderly", "older people", "older person", "dementia",
+                "care home", "nursing home", "supported living", "learning disabilit",
+                "mental health", "residential care", "home care", "domiciliary",
+                "autism", "disability", "social worker"}
+
+def _categorise(text):
+    t = text.lower()
+    if any(k in t for k in _CHILDREN_KW):
+        return "Children"
+    if any(k in t for k in _ADULTS_KW):
+        return "Adults"
+    return "General"
+
+_ATOM = "http://www.w3.org/2005/Atom"
+_HDRS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml"}
+
 _NEWS_CACHE = {"data": None, "ts": 0}
 _NEWS_LOCK  = threading.Lock()
 _NEWS_TTL   = 1800  # 30 min
 
 def _fetch_news():
     articles = []
-    for category, url in _NEWS_FEEDS:
+    for source, fmt, url in _NEWS_FEEDS:
         try:
-            r = req_lib.get(url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+            r = req_lib.get(url, timeout=12, headers=_HDRS)
             r.raise_for_status()
             root = ET.fromstring(r.content)
-            for item in root.findall(".//item"):
-                title = (item.findtext("title") or "").strip()
-                link  = (item.findtext("link")  or "").strip()
-                desc  = re.sub(r"<[^>]+>", "", item.findtext("description") or "")[:220].strip()
-                pub   = (item.findtext("pubDate") or "").strip()
-                if title and link:
-                    articles.append({"category": category, "title": title,
-                                     "link": link, "description": desc, "pub_date": pub})
+            if fmt == "atom":
+                items = root.findall(f"{{{_ATOM}}}entry") or root.findall(".//entry")
+                for item in items:
+                    title = (item.findtext(f"{{{_ATOM}}}title") or item.findtext("title") or "").strip()
+                    link_el = item.find(f"{{{_ATOM}}}link[@rel='alternate']") or item.find(f"{{{_ATOM}}}link")
+                    link  = (link_el.get("href") if link_el is not None else "") or ""
+                    desc  = re.sub(r"<[^>]+>", "", item.findtext(f"{{{_ATOM}}}summary") or
+                                   item.findtext(f"{{{_ATOM}}}content") or "")[:240].strip()
+                    pub   = (item.findtext(f"{{{_ATOM}}}updated") or item.findtext(f"{{{_ATOM}}}published") or "")[:16]
+                    if title and link:
+                        articles.append({"source": source, "category": _categorise(title + " " + desc),
+                                         "title": title, "link": link, "description": desc, "pub_date": pub})
+            else:
+                for item in root.findall(".//item"):
+                    title = (item.findtext("title") or "").strip()
+                    link  = (item.findtext("link")  or "").strip()
+                    desc  = re.sub(r"<[^>]+>", "", item.findtext("description") or "")[:240].strip()
+                    pub   = (item.findtext("pubDate") or "")[:25].strip()
+                    if title and link:
+                        articles.append({"source": source, "category": _categorise(title + " " + desc),
+                                         "title": title, "link": link, "description": desc, "pub_date": pub})
         except Exception:
             pass
     return articles
